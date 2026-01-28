@@ -981,7 +981,7 @@
           updateHeaderAvatar(name, currentUserPfp);
 
           startChatListener();
-          setupPresence(user, name, pfp);
+          setupPresence(user);
         } else {
           authContainer.classList.remove('hidden');
           bgElements.classList.remove('opacity-0');
@@ -1016,14 +1016,17 @@
 
       // --- CHAT & PRESENCE ---
 
-      async function setupPresence(user, name, photoUrl) {
+      async function setupPresence(user) {
         const userRef = doc(db, "online", user.uid);
         const updateStatus = async () => {
+            // Use current global state to ensure updates (like PFP changes) are reflected in the heartbeat
+            const currentName = auth.currentUser.displayName || (auth.currentUser.email ? auth.currentUser.email.split('@')[0] : 'Ghost');
+            
             // Guard against undefined photoURL
             await setDoc(userRef, {
                 uid: user.uid,
-                displayName: name,
-                photoURL: photoUrl || null, 
+                displayName: currentName,
+                photoURL: currentUserPfp || null, 
                 lastSeen: serverTimestamp()
             }, { merge: true });
         };
