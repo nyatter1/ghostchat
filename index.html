@@ -544,7 +544,7 @@
                     </div>
                     
                     <!-- Like Button (View Mode) -->
-                    <button id="like-btn" class="hidden mb-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all flex items-center gap-2 group active:scale-95">
+                    <button id="like-btn" class="mb-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all flex items-center gap-2 group active:scale-95">
                         <i id="like-icon" data-lucide="heart" class="w-5 h-5 text-slate-400 group-hover:text-pink-500 transition-colors"></i>
                         <span id="like-count" class="text-slate-300 text-sm font-semibold">0</span>
                     </button>
@@ -555,6 +555,12 @@
                     <div>
                        <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Soul Name</label>
                        <input type="text" id="profile-username" class="w-full bg-transparent border-b border-slate-700 py-2 text-xl font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-600 disabled:border-transparent disabled:cursor-default" disabled>
+                    </div>
+
+                     <!-- Mood Input -->
+                    <div>
+                       <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Current Vibe (Mood)</label>
+                       <input type="text" id="profile-mood" maxlength="30" class="w-full bg-transparent border-b border-slate-700 py-2 text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-600 disabled:border-transparent disabled:cursor-default" disabled placeholder="Haunting...">
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">
@@ -574,6 +580,12 @@
                              <option value="Spirit">Spirit</option>
                           </select>
                        </div>
+                    </div>
+                    
+                    <!-- Bio Input -->
+                    <div>
+                       <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Ethereal Bio</label>
+                       <textarea id="profile-bio" rows="3" maxlength="150" class="w-full bg-transparent border border-slate-700 rounded-lg p-2 text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-600 disabled:border-transparent disabled:resize-none disabled:p-0" disabled placeholder="Whisper your story..."></textarea>
                     </div>
 
                     <!-- Save Button (Edit Mode) -->
@@ -633,6 +645,8 @@
       const profileUsername = document.getElementById('profile-username');
       const profileAge = document.getElementById('profile-age');
       const profileGender = document.getElementById('profile-gender');
+      const profileMood = document.getElementById('profile-mood');
+      const profileBio = document.getElementById('profile-bio');
       const profileSaveBtn = document.getElementById('profile-save-btn');
       
       const profileBannerImg = document.getElementById('profile-banner-img');
@@ -647,7 +661,6 @@
       const likeCount = document.getElementById('like-count');
       
       const toggleViewBtn = document.getElementById('toggle-view-btn');
-      // const toggleViewIcon removed because it gets stale
 
       // Paint Modal Elements
       const paintModal = document.getElementById('paint-modal');
@@ -702,7 +715,8 @@
       let currentViewedProfileUid = null;
       let isEditingProfile = false;
       let isPreviewMode = false;
-      let currentUserPfp = null; // Store locally to avoid re-fetching constantly
+      let currentUserPfp = null; 
+      let currentUserMood = null;
 
       // Paint State
       let ctx = null;
@@ -731,9 +745,8 @@
         window.requestAnimationFrame(step);
       }
 
-      // Image Compression Logic (Client Side) with 1MB Limit Check
+      // Image Compression Logic
       const compressImage = async (file, { quality = 0.7, maxWidth = 800 }) => {
-          // Check file size (1MB = 1048576 bytes)
           if (file.size > 1048576) {
               throw new Error("File too large");
           }
@@ -768,16 +781,14 @@
 
       // --- PLUS MENU LOGIC ---
       plusBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // prevent document click handling immediate closing
+        e.stopPropagation(); 
         plusMenu.classList.toggle('opacity-0');
         plusMenu.classList.toggle('translate-y-4');
         plusMenu.classList.toggle('pointer-events-none');
-        // Find SVG or icon child
         const icon = plusBtn.firstElementChild;
         if(icon) icon.classList.toggle('rotate-45'); 
       });
 
-      // Close menu when clicking outside
       document.addEventListener('click', (e) => {
         if (!plusMenu.contains(e.target) && !plusBtn.contains(e.target)) {
           if (!plusMenu.classList.contains('opacity-0')) {
@@ -793,7 +804,6 @@
       // --- CHAT IMAGE UPLOAD ---
       chatUploadBtn.addEventListener('click', () => {
           fileInputChat.click();
-          // Close menu after click
           plusMenu.classList.add('opacity-0');
           plusMenu.classList.add('translate-y-4');
           plusMenu.classList.add('pointer-events-none');
@@ -808,12 +818,10 @@
           if(!user) return;
 
           try {
-             // Compress heavily for chat to save bandwidth/storage doc size
-             // Use 600px width max
              const base64 = await compressImage(file, { maxWidth: 600, quality: 0.7 });
              
              await addDoc(collection(db, "messages"), {
-                text: "", // Empty text for image message
+                text: "", 
                 imageURL: base64,
                 type: "image",
                 uid: user.uid,
@@ -822,7 +830,7 @@
                 createdAt: serverTimestamp()
              });
 
-             fileInputChat.value = ''; // Reset input
+             fileInputChat.value = ''; 
           } catch(e) {
              console.error(e);
              if(e.message === "File too large") {
@@ -834,10 +842,8 @@
       });
 
       // --- PAINT STUDIO LOGIC ---
-      
       paintBtn.addEventListener('click', () => {
           toggleModal(paintModal, true);
-          // Close plus menu
           plusMenu.classList.add('opacity-0');
           plusMenu.classList.add('translate-y-4');
           plusMenu.classList.add('pointer-events-none');
@@ -852,19 +858,16 @@
       function initCanvas() {
          if(!paintCanvas) return;
          ctx = paintCanvas.getContext('2d');
-         // Set default styles
          ctx.lineCap = 'round';
          ctx.lineJoin = 'round';
          ctx.lineWidth = 5;
          ctx.strokeStyle = '#00ffff';
 
-         // Mouse Events
          paintCanvas.addEventListener('mousedown', startDrawing);
          paintCanvas.addEventListener('mousemove', draw);
          paintCanvas.addEventListener('mouseup', stopDrawing);
          paintCanvas.addEventListener('mouseout', stopDrawing);
 
-         // Touch Events
          paintCanvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
@@ -893,7 +896,6 @@
          if(!ctx) return;
          isDrawing = true;
          const rect = paintCanvas.getBoundingClientRect();
-         // Scale for canvas resolution vs display size
          const scaleX = paintCanvas.width / rect.width;
          const scaleY = paintCanvas.height / rect.height;
          
@@ -918,7 +920,6 @@
          }
       }
 
-      // Tools
       paintColor.addEventListener('input', (e) => {
           if(!ctx) return;
           isEraser = false;
@@ -958,11 +959,8 @@
           if(!user || !ctx) return;
           
           try {
-             // Create a temporary canvas to add a background if desired, or just send transparent
-             // Sending transparent PNG
              const base64 = paintCanvas.toDataURL('image/png');
              
-             // Reuse existing message logic
              await addDoc(collection(db, "messages"), {
                 text: "",
                 imageURL: base64,
@@ -973,7 +971,6 @@
                 createdAt: serverTimestamp()
              });
 
-             // Clear and close
              ctx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
              toggleModal(paintModal, false);
 
@@ -987,7 +984,6 @@
       window.openLightbox = (url) => {
           lightboxImg.src = url;
           lightbox.classList.remove('hidden');
-          // Trigger reflow for transition
           void lightbox.offsetWidth;
           lightbox.classList.remove('opacity-0');
           lightbox.classList.add('lightbox-open');
@@ -1017,11 +1013,12 @@
           profileUsername.value = "Summoning...";
           profileAge.value = "";
           profileGender.value = "Unknown";
+          profileMood.value = "";
+          profileBio.value = "";
           profileBannerImg.classList.add('hidden');
           profileBannerPlaceholder.classList.remove('hidden');
           profilePfpImg.classList.add('hidden');
           profilePfpPlaceholder.classList.remove('hidden');
-          likeBtn.classList.add('hidden');
           toggleViewBtn.classList.add('hidden');
           
           toggleModal(profileModal, true);
@@ -1035,6 +1032,8 @@
               profileUsername.value = data.displayName || "Unknown Spirit";
               profileAge.value = data.age || "";
               profileGender.value = data.gender || "Unknown";
+              profileMood.value = data.mood || "";
+              profileBio.value = data.bio || "";
               
               // Images
               if (data.bannerURL) {
@@ -1051,35 +1050,41 @@
                   profilePfpPlaceholder.classList.add('hidden');
               }
 
+              // Setup Likes
+              const likes = data.likes || 0;
+              likeCount.textContent = formatNumber(likes);
+              
+              // Like Status Check
+              const likedBy = data.likedBy || [];
+              const isLiked = likedBy.includes(currentUser.uid);
+              if (isLiked) {
+                  likeIcon.classList.add('fill-pink-500', 'text-pink-500');
+                  likeBtn.classList.add('border-pink-500/30', 'bg-pink-500/10');
+              } else {
+                  likeIcon.classList.remove('fill-pink-500', 'text-pink-500');
+                  likeBtn.classList.remove('border-pink-500/30', 'bg-pink-500/10');
+              }
+
               // UI State: Edit vs View
               if (isMe) {
-                  // Enable Edit Mode Features
                   setProfileMode('edit');
                   toggleViewBtn.classList.remove('hidden');
                   
-                  // Add click listeners for file upload
                   bannerEditOverlay.onclick = () => fileInputBanner.click();
                   pfpEditOverlay.onclick = () => fileInputAvatar.click();
+
+                  // Show like count but disable interaction for self
+                  likeBtn.classList.remove('hidden');
+                  likeBtn.disabled = true;
+                  likeBtn.classList.add('opacity-70', 'cursor-default');
                   
               } else {
-                  // Force View Mode
                   setProfileMode('view');
-                  toggleViewBtn.classList.add('hidden'); // Can't edit others
+                  toggleViewBtn.classList.add('hidden');
                   
-                  // Like Button Logic
                   likeBtn.classList.remove('hidden');
-                  const likes = data.likes || 0;
-                  const likedBy = data.likedBy || [];
-                  const isLiked = likedBy.includes(currentUser.uid);
-                  
-                  likeCount.textContent = formatNumber(likes);
-                  if (isLiked) {
-                      likeIcon.classList.add('fill-pink-500', 'text-pink-500');
-                      likeBtn.classList.add('border-pink-500/30', 'bg-pink-500/10');
-                  } else {
-                      likeIcon.classList.remove('fill-pink-500', 'text-pink-500');
-                      likeBtn.classList.remove('border-pink-500/30', 'bg-pink-500/10');
-                  }
+                  likeBtn.disabled = false;
+                  likeBtn.classList.remove('opacity-70', 'cursor-default');
               }
 
           } catch (e) {
@@ -1089,12 +1094,13 @@
       };
 
       function setProfileMode(mode) {
-          // Dynamic icon update
           if (mode === 'edit') {
               // Edit Mode
               profileUsername.disabled = false;
               profileAge.disabled = false;
               profileGender.disabled = false;
+              profileMood.disabled = false;
+              profileBio.disabled = false;
               profileSaveBtn.classList.remove('hidden');
               bannerEditOverlay.classList.remove('hidden');
               pfpEditOverlay.classList.remove('hidden');
@@ -1102,10 +1108,12 @@
               toggleViewBtn.innerHTML = '<i data-lucide="eye" class="w-5 h-5"></i>';
               
           } else {
-              // View Mode (Preview or Other)
+              // View Mode
               profileUsername.disabled = true;
               profileAge.disabled = true;
               profileGender.disabled = true;
+              profileMood.disabled = true;
+              profileBio.disabled = true;
               profileSaveBtn.classList.add('hidden');
               bannerEditOverlay.classList.add('hidden');
               pfpEditOverlay.classList.add('hidden');
@@ -1114,8 +1122,6 @@
           }
           lucide.createIcons();
       }
-
-      // --- MODAL LOGIC ---
 
       function toggleModal(modal, show) {
           if (show) {
@@ -1133,7 +1139,6 @@
       closeProfileBtn.addEventListener('click', () => toggleModal(profileModal, false));
       closeWalletBtn.addEventListener('click', () => toggleModal(walletModal, false));
 
-      // --- TOGGLE PREVIEW ---
       toggleViewBtn.addEventListener('click', () => {
           if (!isEditingProfile) return;
           isPreviewMode = !isPreviewMode;
@@ -1151,6 +1156,8 @@
           const newName = profileUsername.value;
           const newAge = profileAge.value;
           const newGender = profileGender.value;
+          const newMood = profileMood.value;
+          const newBio = profileBio.value;
           
           const newPfp = (!profilePfpImg.classList.contains('hidden')) ? profilePfpImg.src : null;
           const newBanner = (!profileBannerImg.classList.contains('hidden')) ? profileBannerImg.src : null;
@@ -1159,26 +1166,30 @@
              profileSaveBtn.textContent = "Saving...";
              profileSaveBtn.disabled = true;
 
-             // 1. Update Auth Display Name ONLY (No PhotoURL to avoid limit error)
+             // 1. Update Auth Display Name
              await updateProfile(user, { displayName: newName });
              
-             // 2. Update Firestore (Guard against undefined)
+             // 2. Update Firestore
              await setDoc(doc(db, "users", user.uid), {
                  displayName: newName,
                  photoURL: newPfp || null,
                  bannerURL: newBanner || null,
                  age: newAge,
-                 gender: newGender
+                 gender: newGender,
+                 mood: newMood,
+                 bio: newBio
              }, { merge: true });
 
-             // 3. Update Local State & Header
+             // 3. Update Local State
              currentUserPfp = newPfp || null;
+             currentUserMood = newMood || null;
              updateHeaderAvatar(user.displayName, currentUserPfp);
              
-             // 4. Update Online Status (Guard against undefined)
+             // 4. Update Online Status
              await updateDoc(doc(db, "online", user.uid), {
                  displayName: newName,
-                 photoURL: newPfp || null
+                 photoURL: newPfp || null,
+                 mood: newMood || null
              });
 
              toggleModal(profileModal, false);
@@ -1196,9 +1207,9 @@
       likeBtn.addEventListener('click', async () => {
           if(!currentViewedProfileUid) return;
           const user = auth.currentUser;
+          if (user.uid === currentViewedProfileUid) return; // double check
+
           const userRef = doc(db, "users", currentViewedProfileUid);
-          
-          // Use firstElementChild to get the SVG, since Lucide replaced the 'i'
           const icon = likeBtn.firstElementChild; 
           const isLiked = icon && icon.classList.contains('fill-pink-500');
           let currentCount = parseInt(likeCount.textContent.replace(/,/g, ''));
@@ -1229,7 +1240,6 @@
           }
       });
 
-      // File Inputs Handling
       fileInputAvatar.addEventListener('change', async (e) => {
           const file = e.target.files[0];
           if(!file) return;
@@ -1239,11 +1249,7 @@
               profilePfpImg.classList.remove('hidden');
               profilePfpPlaceholder.classList.add('hidden');
           } catch(e) {
-              if (e.message === "File too large") {
-                  alert("Image is too large! Max 1MB allowed.");
-              } else {
-                  alert("Image processing failed.");
-              }
+              alert("Image processing failed or file too large.");
           }
       });
 
@@ -1256,11 +1262,7 @@
               profileBannerImg.classList.remove('hidden');
               profileBannerPlaceholder.classList.add('hidden');
           } catch(e) {
-              if (e.message === "File too large") {
-                  alert("Image is too large! Max 1MB allowed.");
-              } else {
-                  alert("Image processing failed.");
-              }
+               alert("Image processing failed or file too large.");
           }
       });
 
@@ -1288,7 +1290,6 @@
         }
       });
 
-      // --- MENU LOGIC ---
       profileBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           profileDropdown.classList.toggle('hidden');
@@ -1331,19 +1332,19 @@
           chatContainer.classList.remove('hidden');
           chatContainer.classList.add('flex');
           
-          // INIT USER DATA
           const userRef = doc(db, "users", user.uid);
           const userSnap = await getDoc(userRef);
           
           let pfp = null;
+          let mood = null;
           let name = user.displayName || user.email.split('@')[0];
 
           if (userSnap.exists()) {
               const data = userSnap.data();
-              pfp = data.photoURL || null; // Fix undefined
+              pfp = data.photoURL || null; 
+              mood = data.mood || null;
               name = data.displayName || name;
           } else {
-              // Create doc if missing
               await setDoc(userRef, {
                   coins: 10000,
                   gems: 10000,
@@ -1351,12 +1352,14 @@
                   likedBy: [],
                   displayName: name,
                   photoURL: null,
+                  mood: null,
+                  bio: "",
                   createdAt: serverTimestamp()
               }, { merge: true });
           }
           
-          // Set global cached PFP
           currentUserPfp = pfp;
+          currentUserMood = mood;
           updateHeaderAvatar(name, currentUserPfp);
 
           startChatListener();
@@ -1369,6 +1372,7 @@
           profileDropdown.classList.add('hidden');
           
           currentUserPfp = null;
+          currentUserMood = null;
 
           if (unsubscribeMessages) unsubscribeMessages();
           if (unsubscribeUsers) unsubscribeUsers();
@@ -1398,14 +1402,13 @@
       async function setupPresence(user) {
         const userRef = doc(db, "online", user.uid);
         const updateStatus = async () => {
-            // Use current global state to ensure updates (like PFP changes) are reflected in the heartbeat
             const currentName = auth.currentUser.displayName || (auth.currentUser.email ? auth.currentUser.email.split('@')[0] : 'Ghost');
             
-            // Guard against undefined photoURL
             await setDoc(userRef, {
                 uid: user.uid,
                 displayName: currentName,
-                photoURL: currentUserPfp || null, 
+                photoURL: currentUserPfp || null,
+                mood: currentUserMood || null,
                 lastSeen: serverTimestamp()
             }, { merge: true });
         };
@@ -1421,16 +1424,14 @@
                 if (!data.uid) return;
 
                 const lastSeen = data.lastSeen ? data.lastSeen.toDate() : new Date();
-                const diff = (new Date() - lastSeen) / 1000 / 60; // mins
+                const diff = (new Date() - lastSeen) / 1000 / 60; 
                 
-                // 5 minute timeout for online status
                 if (diff < 5) {
                     validUids.add(data.uid);
                     updateUserListElement(data);
                 }
             });
 
-            // Cleanup stale users
             Array.from(usersList.children).forEach(child => {
                const uid = child.getAttribute('data-uid');
                if(uid && !validUids.has(uid)) {
@@ -1447,8 +1448,9 @@
           
           const newPfp = data.photoURL || '';
           const newName = data.displayName || 'Ghost';
+          const newMood = data.mood || '';
 
-          const generateInner = (pfp, name) => {
+          const generateInner = (pfp, name, mood) => {
               let avatarHTML;
               if (pfp && pfp !== 'null') {
                   avatarHTML = `<img src="${pfp}" class="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-indigo-500/50">`;
@@ -1458,35 +1460,42 @@
                      <i data-lucide="ghost" class="w-4 h-4 text-slate-400 group-hover:text-indigo-400"></i>
                    </div>`;
               }
+              
+              const moodHTML = mood ? `<div class="text-[10px] font-bold italic text-indigo-300 truncate pointer-events-none mt-0.5">${mood}</div>` : '';
+
               return `
-                 <div class="relative pointer-events-none">
+                 <div class="relative pointer-events-none shrink-0">
                    ${avatarHTML}
                    <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-slate-900 rounded-full"></div>
                  </div>
-                 <span class="text-sm font-medium text-slate-400 group-hover:text-slate-200 transition-colors truncate pointer-events-none">${name}</span>
+                 <div class="flex flex-col min-w-0 overflow-hidden">
+                    <span class="text-sm font-medium text-slate-400 group-hover:text-slate-200 transition-colors truncate pointer-events-none leading-tight">${name}</span>
+                    ${moodHTML}
+                 </div>
               `;
           };
 
           if (existing) {
              const currentPfp = existing.getAttribute('data-pfp') || '';
              const currentName = existing.getAttribute('data-name');
+             const currentMood = existing.getAttribute('data-mood') || '';
              
-             // Diff Check: Only update DOM if PFP or Name changed
-             if (currentPfp !== newPfp || currentName !== newName) {
-                 existing.innerHTML = generateInner(newPfp, newName);
+             if (currentPfp !== newPfp || currentName !== newName || currentMood !== newMood) {
+                 existing.innerHTML = generateInner(newPfp, newName, newMood);
                  existing.setAttribute('data-pfp', newPfp);
                  existing.setAttribute('data-name', newName);
+                 existing.setAttribute('data-mood', newMood);
                  try { lucide.createIcons({ root: existing }); } catch(e) { }
              }
           } else {
-             // Create New
              const div = document.createElement('div');
              div.className = "flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group animate-fade-in";
              div.setAttribute('data-uid', data.uid);
              div.setAttribute('data-pfp', newPfp);
              div.setAttribute('data-name', newName);
+             div.setAttribute('data-mood', newMood);
              div.onclick = () => openProfile(data.uid); 
-             div.innerHTML = generateInner(newPfp, newName);
+             div.innerHTML = generateInner(newPfp, newName, newMood);
              usersList.appendChild(div);
              try { lucide.createIcons({ root: div }); } catch(e) { }
           }
@@ -1554,8 +1563,6 @@
         lucide.createIcons();
       }
 
-      // --- FORMS ---
-
       authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = emailInput.value;
@@ -1583,6 +1590,8 @@
                 likedBy: [],
                 displayName: username || email.split('@')[0],
                 photoURL: null,
+                mood: null,
+                bio: "",
                 createdAt: serverTimestamp()
             });
           }
@@ -1610,12 +1619,11 @@
         if (!text || !user) return;
         try {
           messageInput.value = ''; 
-          // Use cached Firestore PFP if available
           await addDoc(collection(db, "messages"), {
             text: text,
             uid: user.uid,
             displayName: user.displayName || user.email.split('@')[0],
-            photoURL: currentUserPfp || null, // Guard undefined
+            photoURL: currentUserPfp || null,
             createdAt: serverTimestamp()
           });
         } catch (error) {
