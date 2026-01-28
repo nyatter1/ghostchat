@@ -654,10 +654,13 @@
                  </div>
 
                  <form id="profile-form" class="space-y-4">
-                    <!-- Username -->
+                    <!-- Username & Rank -->
                     <div>
                        <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Soul Name</label>
-                       <input type="text" id="profile-username" class="w-full bg-transparent border-b border-slate-700 py-2 text-xl font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-600 disabled:border-transparent disabled:cursor-default" disabled>
+                       <div class="flex items-center gap-3">
+                           <input type="text" id="profile-username" class="flex-1 bg-transparent border-b border-slate-700 py-2 text-xl font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-600 disabled:border-transparent disabled:cursor-default" disabled>
+                           <span id="profile-rank-badge" class="hidden px-2 py-1 rounded text-xs font-bold uppercase tracking-wider"></span>
+                       </div>
                     </div>
 
                      <!-- Mood Input -->
@@ -746,6 +749,7 @@
       const closeProfileBtn = document.getElementById('close-profile-btn');
       const profileForm = document.getElementById('profile-form');
       const profileUsername = document.getElementById('profile-username');
+      const profileRankBadge = document.getElementById('profile-rank-badge');
       const profileAge = document.getElementById('profile-age');
       const profileGender = document.getElementById('profile-gender');
       const profileMood = document.getElementById('profile-mood');
@@ -845,6 +849,7 @@
       // Current User Global State
       let currentUserPfp = null; 
       let currentUserMood = null;
+      let currentUserRank = 'Ghost'; // Default
       let currentUserStyle = {
           username: { colorType: 'solid', value: '#ffffff', font: 'Inter' },
           message: { colorType: 'solid', value: '#e2e8f0', font: 'Inter' },
@@ -866,7 +871,7 @@
       let fxTarget = 'profile'; // 'profile' or 'card'
       let fxTempStyle = JSON.parse(JSON.stringify(currentUserStyle));
 
-      // DATA ARRAYS
+      // DATA ARRAYS (Fonts, Colors etc. remain the same as previous)
       const FONTS = [
           "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Oswald", "Raleway", "PT Sans", "Merriweather", "Noto Sans", 
           "Nunito", "Prompt", "Work Sans", "Rubik", "Poppins", "Fira Sans", "Mukta", "Quicksand", "Ubuntu", "Playfair Display",
@@ -1347,6 +1352,7 @@
                 displayName: user.displayName || user.email.split('@')[0],
                 photoURL: currentUserPfp || null,
                 style: currentUserStyle, // Pass current style snapshot
+                rank: currentUserRank, // Pass rank
                 createdAt: serverTimestamp()
              });
 
@@ -1489,6 +1495,7 @@
                 displayName: user.displayName || user.email.split('@')[0],
                 photoURL: currentUserPfp || null,
                 style: currentUserStyle,
+                rank: currentUserRank, // Pass rank
                 createdAt: serverTimestamp()
              });
 
@@ -1532,6 +1539,7 @@
           // Reset UI
           profileDropdown.classList.add('hidden');
           profileUsername.value = "Summoning...";
+          profileRankBadge.classList.add('hidden'); // Reset rank badge
           profileAge.value = "";
           profileGender.value = "Unknown";
           profileMood.value = "";
@@ -1560,6 +1568,17 @@
               profileMood.value = data.mood || "";
               profileBio.value = data.bio || "";
               
+              // Show Rank
+              const rank = data.rank || 'Ghost';
+              profileRankBadge.textContent = rank;
+              profileRankBadge.classList.remove('hidden');
+              
+              if (rank === 'Dev') {
+                  profileRankBadge.className = "px-2 py-1 rounded text-xs font-bold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30";
+              } else {
+                  profileRankBadge.className = "px-2 py-1 rounded text-xs font-bold uppercase tracking-wider bg-slate-700/50 text-slate-400 border border-white/5";
+              }
+
               // Apply Profile FX
               if(data.style && data.style.profileBG && data.style.profileBG !== 'none') {
                   glassPanel.setAttribute('style', data.style.profileBG);
@@ -1711,7 +1730,8 @@
                  gender: newGender,
                  mood: newMood,
                  bio: newBio,
-                 style: currentUserStyle
+                 style: currentUserStyle,
+                 rank: currentUserRank // Persist rank
              }, { merge: true });
 
              currentUserPfp = newPfp || null;
@@ -1722,6 +1742,7 @@
                  displayName: newName,
                  photoURL: newPfp || null,
                  mood: newMood || null,
+                 rank: currentUserRank, // Persist rank to presence
                  style: {
                      username: currentUserStyle.username,
                      cardBG: currentUserStyle.cardBG || 'none'
@@ -1874,33 +1895,46 @@
           let pfp = null;
           let mood = null;
           let name = user.displayName || user.email.split('@')[0];
+          let rank = 'Ghost';
+
+          // Assign Rank Logic
+          if (user.email === 'dev@gmail.com') {
+              rank = 'Dev';
+          }
 
           if (userSnap.exists()) {
               const data = userSnap.data();
               pfp = data.photoURL || null; 
               mood = data.mood || null;
               name = data.displayName || name;
+              // If rank exists in DB and is not Dev (unless email matches), use it.
+              // Enforce Dev rank on login if email matches
+              if (user.email === 'dev@gmail.com') rank = 'Dev'; 
+              else rank = data.rank || 'Ghost';
               
               if(data.style) {
                   currentUserStyle = data.style;
               }
-          } else {
-              await setDoc(userRef, {
-                  coins: 10000,
-                  gems: 10000,
-                  likes: 0,
-                  likedBy: [],
-                  displayName: name,
-                  photoURL: null,
-                  mood: null,
-                  bio: "",
-                  style: currentUserStyle,
-                  createdAt: serverTimestamp()
-              }, { merge: true });
-          }
+          } 
+          
+          // Always update the rank in DB to ensure it's synced
+          await setDoc(userRef, {
+              coins: userSnap.exists() ? (userSnap.data().coins || 10000) : 10000,
+              gems: userSnap.exists() ? (userSnap.data().gems || 10000) : 10000,
+              likes: userSnap.exists() ? (userSnap.data().likes || 0) : 0,
+              likedBy: userSnap.exists() ? (userSnap.data().likedBy || []) : [],
+              displayName: name,
+              photoURL: pfp,
+              mood: mood,
+              rank: rank,
+              bio: userSnap.exists() ? (userSnap.data().bio || "") : "",
+              style: currentUserStyle,
+              createdAt: serverTimestamp() // Only if new really, but safe here for this simple app
+          }, { merge: true });
           
           currentUserPfp = pfp;
           currentUserMood = mood;
+          currentUserRank = rank;
           updateHeaderAvatar(name, currentUserPfp);
 
           startChatListener();
@@ -1914,6 +1948,7 @@
           
           currentUserPfp = null;
           currentUserMood = null;
+          currentUserRank = 'Ghost';
 
           if (unsubscribeMessages) unsubscribeMessages();
           if (unsubscribeUsers) unsubscribeUsers();
@@ -1950,6 +1985,7 @@
                 displayName: currentName,
                 photoURL: currentUserPfp || null,
                 mood: currentUserMood || null,
+                rank: currentUserRank, // Sync Rank
                 style: {
                     username: currentUserStyle.username,
                     cardBG: currentUserStyle.cardBG || 'none'
@@ -1994,9 +2030,10 @@
           const newPfp = data.photoURL || '';
           const newName = data.displayName || 'Ghost';
           const newMood = data.mood || '';
+          const newRank = data.rank || 'Ghost';
           const newStyleStr = JSON.stringify(data.style || {}); 
 
-          const generateInner = (pfp, name, mood, styleObj) => {
+          const generateInner = (pfp, name, mood, rank, styleObj) => {
               let avatarHTML;
               if (pfp && pfp !== 'null') {
                   avatarHTML = `<img src="${pfp}" class="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-indigo-500/50">`;
@@ -2008,6 +2045,14 @@
               }
               
               const moodHTML = mood ? `<div class="text-[10px] font-bold italic text-indigo-300 truncate pointer-events-none mt-0.5">${mood}</div>` : '';
+
+              // Rank Badge
+              let rankHTML = '';
+              if (rank === 'Dev') {
+                  rankHTML = `<span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">DEV</span>`;
+              } else {
+                  rankHTML = `<span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-700/50 text-slate-400 border border-white/5">GHOST</span>`;
+              }
 
               // Apply User Style (Username)
               let nameStyle = `font-family: ${styleObj.username?.font || 'Inter'};`;
@@ -2028,7 +2073,10 @@
                    <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-slate-900 rounded-full"></div>
                  </div>
                  <div class="flex flex-col min-w-0 overflow-hidden">
-                    <span class="text-sm font-medium transition-colors truncate pointer-events-none leading-tight" style="${nameStyle}">${name}</span>
+                    <div class="flex items-center">
+                        <span class="text-sm font-medium transition-colors truncate pointer-events-none leading-tight" style="${nameStyle}">${name}</span>
+                        ${rankHTML}
+                    </div>
                     ${moodHTML}
                  </div>
               `;
@@ -2041,13 +2089,15 @@
              const currentPfp = existing.getAttribute('data-pfp') || '';
              const currentName = existing.getAttribute('data-name');
              const currentMood = existing.getAttribute('data-mood') || '';
+             const currentRankAttr = existing.getAttribute('data-rank') || '';
              const currentStyle = existing.getAttribute('data-style') || '{}';
              
-             if (currentPfp !== newPfp || currentName !== newName || currentMood !== newMood || currentStyle !== newStyleStr) {
-                 existing.innerHTML = generateInner(newPfp, newName, newMood, data.style || {});
+             if (currentPfp !== newPfp || currentName !== newName || currentMood !== newMood || currentRankAttr !== newRank || currentStyle !== newStyleStr) {
+                 existing.innerHTML = generateInner(newPfp, newName, newMood, newRank, data.style || {});
                  existing.setAttribute('data-pfp', newPfp);
                  existing.setAttribute('data-name', newName);
                  existing.setAttribute('data-mood', newMood);
+                 existing.setAttribute('data-rank', newRank);
                  existing.setAttribute('data-style', newStyleStr);
                  // Update card BG
                  if (cardStyle) existing.setAttribute('style', cardStyle);
@@ -2065,9 +2115,10 @@
              div.setAttribute('data-pfp', newPfp);
              div.setAttribute('data-name', newName);
              div.setAttribute('data-mood', newMood);
+             div.setAttribute('data-rank', newRank);
              div.setAttribute('data-style', newStyleStr);
              div.onclick = () => openProfile(data.uid); 
-             div.innerHTML = generateInner(newPfp, newName, newMood, data.style || {});
+             div.innerHTML = generateInner(newPfp, newName, newMood, newRank, data.style || {});
              usersList.appendChild(div);
              try { lucide.createIcons({ root: div }); } catch(e) { }
           }
@@ -2149,12 +2200,22 @@
             nameStyle += `color: #e2e8f0;`;
         }
 
+        // Rank Badge
+        const rank = data.rank || 'Ghost';
+        let rankHTML = '';
+        if (rank === 'Dev') {
+            rankHTML = `<span class="bg-rose-500/20 text-rose-300 text-[10px] px-1.5 py-0.5 rounded border border-rose-500/30 uppercase tracking-wider font-bold ml-2">DEV</span>`;
+        } else {
+            rankHTML = `<span class="bg-slate-700/50 text-slate-400 text-[10px] px-1.5 py-0.5 rounded border border-white/5 uppercase tracking-wider font-bold ml-2">GHOST</span>`;
+        }
+
         div.innerHTML = `
           ${avatarHTML}
           <div class="flex flex-col min-w-0 flex-1">
             <div class="flex items-baseline gap-2">
                <span class="font-bold hover:underline cursor-pointer" style="${nameStyle}" onclick="openProfile('${data.uid}')">${data.displayName}</span>
-               <span class="text-[10px] text-slate-600 group-hover:text-slate-500 transition-colors">${timeString}</span>
+               ${rankHTML}
+               <span class="text-[10px] text-slate-600 group-hover:text-slate-500 transition-colors ml-auto">${timeString}</span>
             </div>
             ${contentHTML}
           </div>
@@ -2183,6 +2244,11 @@
             if (username) {
                await updateProfile(userCredential.user, { displayName: username });
             }
+            
+            // Initial Rank
+            let initialRank = 'Ghost';
+            if (email === 'dev@gmail.com') initialRank = 'Dev';
+
             await setDoc(doc(db, "users", userCredential.user.uid), {
                 coins: 10000,
                 gems: 10000,
@@ -2193,6 +2259,7 @@
                 mood: null,
                 bio: "",
                 style: currentUserStyle,
+                rank: initialRank, // Set initial rank
                 createdAt: serverTimestamp()
             });
           }
@@ -2226,6 +2293,7 @@
             displayName: user.displayName || user.email.split('@')[0],
             photoURL: currentUserPfp || null,
             style: currentUserStyle, // Add style
+            rank: currentUserRank, // Add rank
             createdAt: serverTimestamp()
           });
         } catch (error) {
