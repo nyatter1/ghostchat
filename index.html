@@ -73,6 +73,7 @@
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: background 0.3s ease, border-color 0.3s ease;
       }
       /* Transitions for height/opacity */
       .form-group {
@@ -156,19 +157,22 @@
         border-radius: 50%;
       }
       
-      /* Text Studio Styles */
+      /* Text & FX Studio Styles */
       .ts-grid-item {
          transition: all 0.2s;
          cursor: pointer;
+         border: 1px solid rgba(255,255,255,0.1);
       }
       .ts-grid-item:hover {
          transform: scale(1.1);
          z-index: 10;
          box-shadow: 0 0 15px rgba(255,255,255,0.2);
+         border-color: rgba(255,255,255,0.5);
       }
       .ts-selected {
          box-shadow: 0 0 0 2px #fff, 0 0 10px #a855f7;
          transform: scale(1.1);
+         border-color: transparent;
       }
       .ts-font-item {
          padding: 8px;
@@ -386,6 +390,11 @@
                  <i data-lucide="type" class="w-5 h-5"></i>
                  <span class="absolute left-12 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Text</span>
                </button>
+               <!-- FX Studio (Cards) -->
+               <button type="button" id="fx-studio-btn" class="w-10 h-10 rounded-full bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center shadow-lg shadow-violet-500/30 transition-all hover:scale-110 active:scale-95 group">
+                 <i data-lucide="sparkles" class="w-5 h-5"></i>
+                 <span class="absolute left-12 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">FX</span>
+               </button>
                <!-- Upload -->
                <button type="button" id="chat-upload-btn" class="w-10 h-10 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all hover:scale-110 active:scale-95 group">
                  <i data-lucide="image" class="w-5 h-5"></i>
@@ -433,75 +442,63 @@
     <div id="text-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
         <div class="relative w-full max-w-4xl p-4 animate-pop h-[90vh]">
            <div class="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl flex flex-col md:flex-row gap-6 bg-[#0f172a] h-full overflow-hidden">
-               
-               <!-- Close Btn -->
-               <button id="close-text-btn" class="absolute top-6 right-6 z-20 text-slate-400 hover:text-white transition-colors p-2 bg-black/50 rounded-full">
-                   <i data-lucide="x" class="w-5 h-5"></i>
-               </button>
-
-               <!-- Left: Preview -->
+               <button id="close-text-btn" class="absolute top-6 right-6 z-20 text-slate-400 hover:text-white transition-colors p-2 bg-black/50 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
                <div class="w-full md:w-1/3 bg-black/40 rounded-2xl p-6 flex flex-col justify-center items-center border border-white/5 shrink-0 relative overflow-hidden">
                    <div class="text-xs font-mono uppercase text-slate-500 absolute top-4 left-4">Live Preview</div>
-                   
                    <div class="space-y-6 text-center">
-                       <div class="p-4 rounded-xl bg-white/5">
-                           <div class="text-xs text-slate-500 mb-2">Username Style</div>
-                           <span id="ts-preview-username" class="text-2xl font-bold">Your Name</span>
+                       <div class="p-4 rounded-xl bg-white/5"><div class="text-xs text-slate-500 mb-2">Username Style</div><span id="ts-preview-username" class="text-2xl font-bold">Your Name</span></div>
+                       <div class="p-4 rounded-xl bg-white/5"><div class="text-xs text-slate-500 mb-2">Message Style</div><p id="ts-preview-text" class="text-lg">This is how your soul speaks.</p></div>
+                   </div>
+                   <button id="ts-save-btn" class="mt-8 px-8 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-pink-500/20 transition-all active:scale-95">Apply Styles</button>
+               </div>
+               <div class="flex-1 flex flex-col min-h-0">
+                   <div class="flex p-1 bg-slate-800/80 rounded-xl mb-4 shrink-0"><button class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-lg" id="ts-tab-username">Username</button><button class="flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all" id="ts-tab-text">Text Message</button></div>
+                   <div class="flex gap-2 mb-4 shrink-0 overflow-x-auto pb-2"><button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-all ts-type-btn active" data-type="solid">Colours</button><button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all ts-type-btn" data-type="gradient">Gradients</button><button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all ts-type-btn" data-type="neon">Neon</button></div>
+                   <div class="flex-1 overflow-y-auto pr-2 space-y-6"><div><div class="flex items-center justify-between mb-2"><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Font (50+)</label><span id="ts-current-font" class="text-xs text-indigo-400">Default</span></div><div class="grid grid-cols-2 md:grid-cols-3 gap-2" id="ts-font-grid"></div></div><div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block" id="ts-color-label">Palette (50)</label><div class="grid grid-cols-5 md:grid-cols-8 gap-3" id="ts-color-grid"></div></div></div>
+               </div>
+           </div>
+        </div>
+    </div>
+
+    <!-- FX STUDIO MODAL (Card Effects) -->
+    <div id="fx-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="relative w-full max-w-4xl p-4 animate-pop h-[90vh]">
+           <div class="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl flex flex-col md:flex-row gap-6 bg-[#0f172a] h-full overflow-hidden">
+               <button id="close-fx-btn" class="absolute top-6 right-6 z-20 text-slate-400 hover:text-white transition-colors p-2 bg-black/50 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+               
+               <!-- Preview -->
+               <div class="w-full md:w-1/3 bg-black/40 rounded-2xl p-6 flex flex-col justify-center items-center border border-white/5 shrink-0 relative overflow-hidden">
+                   <div class="text-xs font-mono uppercase text-slate-500 absolute top-4 left-4">Live Preview</div>
+                   <div class="space-y-8 w-full">
+                       <!-- Mock Profile Card -->
+                       <div>
+                           <div class="text-xs text-slate-500 mb-2 text-center">Profile Background</div>
+                           <div id="fx-preview-profile" class="w-full h-40 rounded-xl border border-white/10 relative overflow-hidden flex items-center justify-center shadow-2xl">
+                               <span class="relative z-10 font-bold text-white text-shadow">Profile Card</span>
+                           </div>
                        </div>
-                       
-                       <div class="p-4 rounded-xl bg-white/5">
-                           <div class="text-xs text-slate-500 mb-2">Message Style</div>
-                           <p id="ts-preview-text" class="text-lg">This is how your soul speaks in the void.</p>
+                       <!-- Mock User Card -->
+                       <div>
+                           <div class="text-xs text-slate-500 mb-2 text-center">Online User Card</div>
+                           <div id="fx-preview-card" class="w-full p-3 rounded-lg border border-white/10 flex items-center gap-3">
+                               <div class="w-8 h-8 rounded-full bg-slate-700"></div>
+                               <div class="flex-1 h-3 bg-slate-700 rounded w-1/2"></div>
+                           </div>
                        </div>
                    </div>
-
-                   <button id="ts-save-btn" class="mt-8 px-8 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-pink-500/20 transition-all active:scale-95">
-                       Apply Styles
-                   </button>
+                   <button id="fx-save-btn" class="mt-8 px-8 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-violet-500/20 transition-all active:scale-95">Apply FX</button>
                </div>
 
-               <!-- Right: Controls -->
+               <!-- Controls -->
                <div class="flex-1 flex flex-col min-h-0">
-                   <!-- Top Tabs: Target -->
                    <div class="flex p-1 bg-slate-800/80 rounded-xl mb-4 shrink-0">
-                       <button class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-lg" id="ts-tab-username">
-                           Username
-                       </button>
-                       <button class="flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all" id="ts-tab-text">
-                           Text Message
-                       </button>
+                       <button class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-violet-600 text-white shadow-lg" id="fx-tab-profile">Profile Background</button>
+                       <button class="flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all" id="fx-tab-card">User Card</button>
                    </div>
-
-                   <!-- Type Tabs -->
-                   <div class="flex gap-2 mb-4 shrink-0 overflow-x-auto pb-2">
-                       <button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-all ts-type-btn active" data-type="solid">Colours</button>
-                       <button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all ts-type-btn" data-type="gradient">Gradients</button>
-                       <button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all ts-type-btn" data-type="neon">Neon</button>
+                   <div class="flex-1 overflow-y-auto pr-2">
+                       <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Choose Effect (50+)</label>
+                       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="fx-grid"></div>
                    </div>
-                   
-                   <!-- Scrollable Content -->
-                   <div class="flex-1 overflow-y-auto pr-2 space-y-6">
-                       
-                       <!-- Fonts Section -->
-                       <div>
-                           <div class="flex items-center justify-between mb-2">
-                               <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Font (50+)</label>
-                               <span id="ts-current-font" class="text-xs text-indigo-400">Default</span>
-                           </div>
-                           <div class="grid grid-cols-2 md:grid-cols-3 gap-2" id="ts-font-grid">
-                               <!-- Fonts Generated by JS -->
-                           </div>
-                       </div>
-
-                       <!-- Colors Section -->
-                       <div>
-                           <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block" id="ts-color-label">Palette (50)</label>
-                           <div class="grid grid-cols-5 md:grid-cols-8 gap-3" id="ts-color-grid">
-                               <!-- Colors Generated by JS -->
-                           </div>
-                       </div>
-                   </div>
-
                </div>
            </div>
         </div>
@@ -791,6 +788,17 @@
       const tsSaveBtn = document.getElementById('ts-save-btn');
       const tsCurrentFont = document.getElementById('ts-current-font');
 
+      // FX Studio Elements
+      const fxModal = document.getElementById('fx-modal');
+      const closeFxBtn = document.getElementById('close-fx-btn');
+      const fxStudioBtn = document.getElementById('fx-studio-btn');
+      const fxTabProfile = document.getElementById('fx-tab-profile');
+      const fxTabCard = document.getElementById('fx-tab-card');
+      const fxGrid = document.getElementById('fx-grid');
+      const fxPreviewProfile = document.getElementById('fx-preview-profile');
+      const fxPreviewCard = document.getElementById('fx-preview-card');
+      const fxSaveBtn = document.getElementById('fx-save-btn');
+
       // Hidden inputs
       const fileInputAvatar = document.getElementById('file-input-avatar');
       const fileInputBanner = document.getElementById('file-input-banner');
@@ -839,7 +847,9 @@
       let currentUserMood = null;
       let currentUserStyle = {
           username: { colorType: 'solid', value: '#ffffff', font: 'Inter' },
-          message: { colorType: 'solid', value: '#e2e8f0', font: 'Inter' }
+          message: { colorType: 'solid', value: '#e2e8f0', font: 'Inter' },
+          profileBG: 'none',
+          cardBG: 'none'
       };
 
       // Paint State
@@ -852,7 +862,11 @@
       let tsActiveType = 'solid'; // solid, gradient, neon
       let tsTempStyle = JSON.parse(JSON.stringify(currentUserStyle)); // deep copy
 
-      // DATA ARRAYS (50 items each)
+      // FX Studio State
+      let fxTarget = 'profile'; // 'profile' or 'card'
+      let fxTempStyle = JSON.parse(JSON.stringify(currentUserStyle));
+
+      // DATA ARRAYS
       const FONTS = [
           "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Oswald", "Raleway", "PT Sans", "Merriweather", "Noto Sans", 
           "Nunito", "Prompt", "Work Sans", "Rubik", "Poppins", "Fira Sans", "Mukta", "Quicksand", "Ubuntu", "Playfair Display",
@@ -882,6 +896,19 @@
           "#fa8072", "#5f9ea0", "#9acd32", "#bdb76b", "#e9967a", "#b0c4de", "#dda0dd", "#7b68ee", "#f0e68c", "#8fbc8f",
           "#ffb6c1", "#afeeee", "#90ee90", "#fffacd", "#ffa07a", "#87cefa", "#d8bfd8", "#6a5acd", "#ffe4b5", "#3cb371"
       ];
+
+      const PROFILE_BGS = Array.from({length: 60}, (_, i) => {
+          if(i===0) return 'none'; // Default
+          const hue = Math.floor(i * 6);
+          return `linear-gradient(${45 + (i%4)*90}deg, hsl(${hue}, 40%, 15%), hsl(${(hue+60)%360}, 40%, 20%))`;
+      });
+
+      const CARD_BGS = Array.from({length: 60}, (_, i) => {
+          if(i===0) return 'none'; // Default
+          const hue = Math.floor(i * 6);
+          // Subtle border effect or full bg
+          return `border: 1px solid hsl(${hue}, 70%, 50%); background: linear-gradient(90deg, rgba(255,255,255,0.05), transparent)`;
+      });
 
       // Initialize Icons
       lucide.createIcons();
@@ -937,6 +964,117 @@
               reader.onerror = (err) => reject(err);
           });
       };
+
+      // --- FX STUDIO LOGIC ---
+      fxStudioBtn.addEventListener('click', () => {
+          plusMenu.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+          const icon = plusBtn.firstElementChild;
+          if(icon) icon.classList.remove('rotate-45');
+
+          // Reset
+          fxTempStyle = JSON.parse(JSON.stringify(currentUserStyle));
+          fxTarget = 'profile';
+          updateFXUI();
+          toggleModal(fxModal, true);
+      });
+
+      closeFxBtn.addEventListener('click', () => toggleModal(fxModal, false));
+
+      fxTabProfile.addEventListener('click', () => {
+          fxTarget = 'profile';
+          updateFXUI();
+      });
+
+      fxTabCard.addEventListener('click', () => {
+          fxTarget = 'card';
+          updateFXUI();
+      });
+
+      function updateFXUI() {
+          // Tabs
+          if (fxTarget === 'profile') {
+              fxTabProfile.className = "flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-violet-600 text-white shadow-lg";
+              fxTabCard.className = "flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all";
+          } else {
+              fxTabProfile.className = "flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all";
+              fxTabCard.className = "flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-violet-600 text-white shadow-lg";
+          }
+
+          // Grid
+          fxGrid.innerHTML = '';
+          const options = fxTarget === 'profile' ? PROFILE_BGS : CARD_BGS;
+          const current = fxTarget === 'profile' ? fxTempStyle.profileBG : fxTempStyle.cardBG;
+
+          options.forEach((opt, idx) => {
+              const div = document.createElement('div');
+              div.className = `h-20 rounded-lg ts-grid-item relative overflow-hidden ${opt === current ? 'ts-selected' : ''}`;
+              
+              if(fxTarget === 'profile') {
+                  div.style.background = opt === 'none' ? '#0f172a' : opt;
+              } else {
+                  div.setAttribute('style', opt === 'none' ? '' : opt);
+              }
+              
+              if(opt === 'none') {
+                  div.innerHTML = '<span class="absolute inset-0 flex items-center justify-center text-xs text-slate-500">None</span>';
+              }
+
+              div.onclick = () => {
+                  if(fxTarget === 'profile') fxTempStyle.profileBG = opt;
+                  else fxTempStyle.cardBG = opt;
+                  updateFXUI();
+              };
+              fxGrid.appendChild(div);
+          });
+
+          // Preview
+          if(fxTempStyle.profileBG && fxTempStyle.profileBG !== 'none') {
+              fxPreviewProfile.style.background = fxTempStyle.profileBG;
+          } else {
+              fxPreviewProfile.style.background = ''; // reset to default class
+              fxPreviewProfile.className = "w-full h-40 rounded-xl border border-white/10 relative overflow-hidden flex items-center justify-center shadow-2xl bg-[#0f172a]";
+          }
+
+          if(fxTempStyle.cardBG && fxTempStyle.cardBG !== 'none') {
+              fxPreviewCard.setAttribute('style', fxTempStyle.cardBG);
+          } else {
+              fxPreviewCard.removeAttribute('style');
+          }
+      }
+
+      fxSaveBtn.addEventListener('click', async () => {
+          const user = auth.currentUser;
+          if(!user) return;
+          
+          try {
+             fxSaveBtn.textContent = "Saving...";
+             fxSaveBtn.disabled = true;
+
+             currentUserStyle = JSON.parse(JSON.stringify(fxTempStyle));
+
+             // Update Firestore
+             await updateDoc(doc(db, "users", user.uid), {
+                 style: currentUserStyle
+             });
+
+             // Update Online Status
+             await updateDoc(doc(db, "online", user.uid), {
+                 style: {
+                     username: currentUserStyle.username,
+                     cardBG: currentUserStyle.cardBG
+                 } 
+             });
+
+             toggleModal(fxModal, false);
+
+          } catch(e) {
+              console.error(e);
+              alert("Failed to save FX.");
+          } finally {
+              fxSaveBtn.textContent = "Apply FX";
+              fxSaveBtn.disabled = false;
+          }
+      });
 
       // --- TEXT STUDIO LOGIC ---
 
@@ -1087,9 +1225,12 @@
                  style: currentUserStyle
              });
 
-             // Update Online Status (so others see username change immediately)
+             // Update Online Status
              await updateDoc(doc(db, "online", user.uid), {
-                 style: currentUserStyle.username // Only need username style here
+                 style: {
+                     username: currentUserStyle.username,
+                     cardBG: currentUserStyle.cardBG || 'none'
+                 }
              });
 
              toggleModal(textModal, false);
@@ -1348,6 +1489,10 @@
           profilePfpPlaceholder.classList.remove('hidden');
           toggleViewBtn.classList.add('hidden');
           
+          // Reset Profile Modal Background
+          const glassPanel = profileModal.querySelector('.glass-panel');
+          glassPanel.style.background = ''; // clear inline style
+
           toggleModal(profileModal, true);
 
           try {
@@ -1362,6 +1507,13 @@
               profileMood.value = data.mood || "";
               profileBio.value = data.bio || "";
               
+              // Apply Profile FX
+              if(data.style && data.style.profileBG && data.style.profileBG !== 'none') {
+                  glassPanel.style.background = data.style.profileBG;
+              } else {
+                  glassPanel.style.background = '';
+              }
+
               // Images
               if (data.bannerURL) {
                   profileBannerImg.src = data.bannerURL;
@@ -1505,7 +1657,8 @@
                  age: newAge,
                  gender: newGender,
                  mood: newMood,
-                 bio: newBio
+                 bio: newBio,
+                 style: currentUserStyle
              }, { merge: true });
 
              currentUserPfp = newPfp || null;
@@ -1515,7 +1668,11 @@
              await updateDoc(doc(db, "online", user.uid), {
                  displayName: newName,
                  photoURL: newPfp || null,
-                 mood: newMood || null
+                 mood: newMood || null,
+                 style: {
+                     username: currentUserStyle.username,
+                     cardBG: currentUserStyle.cardBG || 'none'
+                 }
              });
 
              toggleModal(profileModal, false);
@@ -1740,7 +1897,10 @@
                 displayName: currentName,
                 photoURL: currentUserPfp || null,
                 mood: currentUserMood || null,
-                style: currentUserStyle.username || null, // Only sync username style
+                style: {
+                    username: currentUserStyle.username,
+                    cardBG: currentUserStyle.cardBG || 'none'
+                },
                 lastSeen: serverTimestamp()
             }, { merge: true });
         };
@@ -1781,7 +1941,6 @@
           const newPfp = data.photoURL || '';
           const newName = data.displayName || 'Ghost';
           const newMood = data.mood || '';
-          // Style stringified for diff check
           const newStyleStr = JSON.stringify(data.style || {}); 
 
           const generateInner = (pfp, name, mood, styleObj) => {
@@ -1797,14 +1956,15 @@
               
               const moodHTML = mood ? `<div class="text-[10px] font-bold italic text-indigo-300 truncate pointer-events-none mt-0.5">${mood}</div>` : '';
 
-              // Apply User Style
-              let nameStyle = `font-family: ${styleObj.font || 'Inter'};`;
-              if (styleObj.colorType === 'solid') {
-                  nameStyle += `color: ${styleObj.value};`;
-              } else if (styleObj.colorType === 'gradient') {
-                  nameStyle += `background: ${styleObj.value}; -webkit-background-clip: text; color: transparent; display: inline-block;`;
-              } else if (styleObj.colorType === 'neon') {
-                  nameStyle += `color: #fff; text-shadow: 0 0 5px ${styleObj.value}, 0 0 10px ${styleObj.value};`;
+              // Apply User Style (Username)
+              let nameStyle = `font-family: ${styleObj.username?.font || 'Inter'};`;
+              const uObj = styleObj.username || {};
+              if (uObj.colorType === 'solid') {
+                  nameStyle += `color: ${uObj.value};`;
+              } else if (uObj.colorType === 'gradient') {
+                  nameStyle += `background: ${uObj.value}; -webkit-background-clip: text; color: transparent; display: inline-block;`;
+              } else if (uObj.colorType === 'neon') {
+                  nameStyle += `color: #fff; text-shadow: 0 0 5px ${uObj.value}, 0 0 10px ${uObj.value};`;
               } else {
                   nameStyle += `color: #cbd5e1;`; // Default slate-300
               }
@@ -1821,6 +1981,9 @@
               `;
           };
 
+          // Handle Card Background
+          const cardStyle = (data.style && data.style.cardBG && data.style.cardBG !== 'none') ? data.style.cardBG : '';
+
           if (existing) {
              const currentPfp = existing.getAttribute('data-pfp') || '';
              const currentName = existing.getAttribute('data-name');
@@ -1833,11 +1996,18 @@
                  existing.setAttribute('data-name', newName);
                  existing.setAttribute('data-mood', newMood);
                  existing.setAttribute('data-style', newStyleStr);
+                 // Update card BG
+                 if (cardStyle) existing.setAttribute('style', cardStyle);
+                 else existing.removeAttribute('style');
+                 
                  try { lucide.createIcons({ root: existing }); } catch(e) { }
              }
           } else {
              const div = document.createElement('div');
              div.className = "flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group animate-fade-in";
+             // Apply Card BG
+             if (cardStyle) div.setAttribute('style', cardStyle);
+
              div.setAttribute('data-uid', data.uid);
              div.setAttribute('data-pfp', newPfp);
              div.setAttribute('data-name', newName);
