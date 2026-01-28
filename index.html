@@ -6,8 +6,8 @@
     <title>Ghost Chat</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts (Broad Selection) -->
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Anton&family=Arimo&family=Bangers&family=Bitter&family=Bree+Serif&family=Bungee&family=Butcherman&family=Cabin&family=Caveat&family=Comfortaa&family=Concert+One&family=Creepster&family=Dancing+Script&family=Dosis&family=Eater&family=Fira+Sans&family=Fjalla+One&family=Fredoka+One&family=Frijole&family=Gloria+Hallelujah&family=Great+Vibes&family=Inconsolata&family=Indie+Flower&family=Kalam&family=Kanit&family=Lato&family=Lobster&family=Lora&family=Merriweather&family=Monoton&family=Montserrat&family=Mukta&family=Nosifer&family=Noto+Sans&family=Nunito&family=Open+Sans&family=Orbitron&family=Oswald&family=Oxygen&family=Pacifico&family=Permanent+Marker&family=Playfair+Display&family=Poppins&family=Press+Start+2P&family=Prompt&family=PT+Sans&family=Quicksand&family=Raleway&family=Righteous&family=Roboto&family=Rubik&family=Ruslan+Display&family=Sacramento&family=Shadows+Into+Light&family=Special+Elite&family=Ubuntu&family=Varela+Round&family=Work+Sans&family=Zilla+Slab&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
@@ -154,6 +154,34 @@
       input[type="color"]::-webkit-color-swatch {
         border: none;
         border-radius: 50%;
+      }
+      
+      /* Text Studio Styles */
+      .ts-grid-item {
+         transition: all 0.2s;
+         cursor: pointer;
+      }
+      .ts-grid-item:hover {
+         transform: scale(1.1);
+         z-index: 10;
+         box-shadow: 0 0 15px rgba(255,255,255,0.2);
+      }
+      .ts-selected {
+         box-shadow: 0 0 0 2px #fff, 0 0 10px #a855f7;
+         transform: scale(1.1);
+      }
+      .ts-font-item {
+         padding: 8px;
+         cursor: pointer;
+         border-radius: 6px;
+         transition: background-color 0.2s;
+      }
+      .ts-font-item:hover {
+         background-color: rgba(255,255,255,0.1);
+      }
+      .ts-font-selected {
+         background-color: rgba(99, 102, 241, 0.3);
+         color: #fff;
       }
     </style>
   </head>
@@ -353,8 +381,8 @@
                  <i data-lucide="palette" class="w-5 h-5"></i>
                  <span class="absolute left-12 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Paint</span>
                </button>
-               <!-- ABC -->
-               <button type="button" class="w-10 h-10 rounded-full bg-pink-600 hover:bg-pink-500 text-white flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all hover:scale-110 active:scale-95 group">
+               <!-- ABC (Text Studio) -->
+               <button type="button" id="text-studio-btn" class="w-10 h-10 rounded-full bg-pink-600 hover:bg-pink-500 text-white flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all hover:scale-110 active:scale-95 group">
                  <i data-lucide="type" class="w-5 h-5"></i>
                  <span class="absolute left-12 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Text</span>
                </button>
@@ -399,6 +427,84 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- TEXT STUDIO MODAL -->
+    <div id="text-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="relative w-full max-w-4xl p-4 animate-pop h-[90vh]">
+           <div class="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl flex flex-col md:flex-row gap-6 bg-[#0f172a] h-full overflow-hidden">
+               
+               <!-- Close Btn -->
+               <button id="close-text-btn" class="absolute top-6 right-6 z-20 text-slate-400 hover:text-white transition-colors p-2 bg-black/50 rounded-full">
+                   <i data-lucide="x" class="w-5 h-5"></i>
+               </button>
+
+               <!-- Left: Preview -->
+               <div class="w-full md:w-1/3 bg-black/40 rounded-2xl p-6 flex flex-col justify-center items-center border border-white/5 shrink-0 relative overflow-hidden">
+                   <div class="text-xs font-mono uppercase text-slate-500 absolute top-4 left-4">Live Preview</div>
+                   
+                   <div class="space-y-6 text-center">
+                       <div class="p-4 rounded-xl bg-white/5">
+                           <div class="text-xs text-slate-500 mb-2">Username Style</div>
+                           <span id="ts-preview-username" class="text-2xl font-bold">Your Name</span>
+                       </div>
+                       
+                       <div class="p-4 rounded-xl bg-white/5">
+                           <div class="text-xs text-slate-500 mb-2">Message Style</div>
+                           <p id="ts-preview-text" class="text-lg">This is how your soul speaks in the void.</p>
+                       </div>
+                   </div>
+
+                   <button id="ts-save-btn" class="mt-8 px-8 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-pink-500/20 transition-all active:scale-95">
+                       Apply Styles
+                   </button>
+               </div>
+
+               <!-- Right: Controls -->
+               <div class="flex-1 flex flex-col min-h-0">
+                   <!-- Top Tabs: Target -->
+                   <div class="flex p-1 bg-slate-800/80 rounded-xl mb-4 shrink-0">
+                       <button class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-lg" id="ts-tab-username">
+                           Username
+                       </button>
+                       <button class="flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all" id="ts-tab-text">
+                           Text Message
+                       </button>
+                   </div>
+
+                   <!-- Type Tabs -->
+                   <div class="flex gap-2 mb-4 shrink-0 overflow-x-auto pb-2">
+                       <button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-all ts-type-btn active" data-type="solid">Colours</button>
+                       <button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all ts-type-btn" data-type="gradient">Gradients</button>
+                       <button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all ts-type-btn" data-type="neon">Neon</button>
+                   </div>
+                   
+                   <!-- Scrollable Content -->
+                   <div class="flex-1 overflow-y-auto pr-2 space-y-6">
+                       
+                       <!-- Fonts Section -->
+                       <div>
+                           <div class="flex items-center justify-between mb-2">
+                               <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Font (50+)</label>
+                               <span id="ts-current-font" class="text-xs text-indigo-400">Default</span>
+                           </div>
+                           <div class="grid grid-cols-2 md:grid-cols-3 gap-2" id="ts-font-grid">
+                               <!-- Fonts Generated by JS -->
+                           </div>
+                       </div>
+
+                       <!-- Colors Section -->
+                       <div>
+                           <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block" id="ts-color-label">Palette (50)</label>
+                           <div class="grid grid-cols-5 md:grid-cols-8 gap-3" id="ts-color-grid">
+                               <!-- Colors Generated by JS -->
+                           </div>
+                       </div>
+                   </div>
+
+               </div>
+           </div>
+        </div>
     </div>
 
     <!-- WALLET MODAL -->
@@ -657,9 +763,7 @@
       const pfpEditOverlay = document.getElementById('pfp-edit-overlay');
       
       const likeBtn = document.getElementById('like-btn');
-      // likeIcon variable removed to prevent stale reference
       const likeCount = document.getElementById('like-count');
-      
       const toggleViewBtn = document.getElementById('toggle-view-btn');
 
       // Paint Modal Elements
@@ -672,6 +776,20 @@
       const paintClear = document.getElementById('paint-clear');
       const paintSave = document.getElementById('paint-save');
       const paintBtn = document.getElementById('paint-btn');
+
+      // Text Studio Elements
+      const textModal = document.getElementById('text-modal');
+      const closeTextBtn = document.getElementById('close-text-btn');
+      const textStudioBtn = document.getElementById('text-studio-btn');
+      const tsPreviewUsername = document.getElementById('ts-preview-username');
+      const tsPreviewText = document.getElementById('ts-preview-text');
+      const tsTabUsername = document.getElementById('ts-tab-username');
+      const tsTabText = document.getElementById('ts-tab-text');
+      const tsFontGrid = document.getElementById('ts-font-grid');
+      const tsColorGrid = document.getElementById('ts-color-grid');
+      const tsTypeBtns = document.querySelectorAll('.ts-type-btn');
+      const tsSaveBtn = document.getElementById('ts-save-btn');
+      const tsCurrentFont = document.getElementById('ts-current-font');
 
       // Hidden inputs
       const fileInputAvatar = document.getElementById('file-input-avatar');
@@ -715,13 +833,55 @@
       let currentViewedProfileUid = null;
       let isEditingProfile = false;
       let isPreviewMode = false;
+      
+      // Current User Global State
       let currentUserPfp = null; 
       let currentUserMood = null;
+      let currentUserStyle = {
+          username: { colorType: 'solid', value: '#ffffff', font: 'Inter' },
+          message: { colorType: 'solid', value: '#e2e8f0', font: 'Inter' }
+      };
 
       // Paint State
       let ctx = null;
       let isDrawing = false;
       let isEraser = false;
+
+      // Text Studio State
+      let tsTarget = 'username'; // or 'message'
+      let tsActiveType = 'solid'; // solid, gradient, neon
+      let tsTempStyle = JSON.parse(JSON.stringify(currentUserStyle)); // deep copy
+
+      // DATA ARRAYS (50 items each)
+      const FONTS = [
+          "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Oswald", "Raleway", "PT Sans", "Merriweather", "Noto Sans", 
+          "Nunito", "Prompt", "Work Sans", "Rubik", "Poppins", "Fira Sans", "Mukta", "Quicksand", "Ubuntu", "Playfair Display",
+          "Lora", "Anton", "Cabin", "Inconsolata", "Dosis", "Oxygen", "Arimo", "Bitter", "Lobster", "Pacifico",
+          "Shadows Into Light", "Indie Flower", "Dancing Script", "Abril Fatface", "Bree Serif", "Fjalla One", "Varela Round", "Comfortaa", "Righteous", "Fredoka One",
+          "Kalam", "Permanent Marker", "Orbitron", "Press Start 2P", "Monoton", "Creepster", "Nosifer", "Butcherman", "Eater", "Frijole"
+      ];
+
+      const SOLID_COLORS = [
+         "#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#475569", "#334155", "#1e293b", "#0f172a",
+         "#ef4444", "#dc2626", "#b91c1c", "#991b1b", "#7f1d1d", "#f97316", "#ea580c", "#c2410c", "#9a3412", "#7c2d12",
+         "#f59e0b", "#d97706", "#b45309", "#92400e", "#78350f", "#eab308", "#ca8a04", "#a16207", "#854d0e", "#713f12",
+         "#84cc16", "#65a30d", "#4d7c0f", "#3f6212", "#365314", "#22c55e", "#16a34a", "#15803d", "#166534", "#14532d",
+         "#10b981", "#059669", "#047857", "#065f46", "#064e3b", "#14b8a6", "#0d9488", "#0f766e", "#115e59", "#134e4a"
+      ];
+
+      const GRADIENTS = Array.from({length: 50}, (_, i) => {
+          const h1 = Math.floor(i * (360/50));
+          const h2 = (h1 + 60) % 360;
+          return `linear-gradient(135deg, hsl(${h1}, 80%, 60%), hsl(${h2}, 80%, 60%))`;
+      });
+
+      const NEON_COLORS = [
+          "#ff00ff", "#00ffff", "#00ff00", "#ffff00", "#ff0000", "#0000ff", "#ff7f00", "#7f00ff", "#ff007f", "#00ff7f",
+          "#ff1493", "#00bfff", "#32cd32", "#ffd700", "#ff4500", "#1e90ff", "#ff69b4", "#8a2be2", "#dc143c", "#00fa9a",
+          "#f08080", "#20b2aa", "#98fb98", "#eee8aa", "#ff6347", "#4682b4", "#da70d6", "#9370db", "#cd5c5c", "#66cdaa",
+          "#fa8072", "#5f9ea0", "#9acd32", "#bdb76b", "#e9967a", "#b0c4de", "#dda0dd", "#7b68ee", "#f0e68c", "#8fbc8f",
+          "#ffb6c1", "#afeeee", "#90ee90", "#fffacd", "#ffa07a", "#87cefa", "#d8bfd8", "#6a5acd", "#ffe4b5", "#3cb371"
+      ];
 
       // Initialize Icons
       lucide.createIcons();
@@ -745,7 +905,6 @@
         window.requestAnimationFrame(step);
       }
 
-      // Image Compression Logic
       const compressImage = async (file, { quality = 0.7, maxWidth = 800 }) => {
           if (file.size > 1048576) {
               throw new Error("File too large");
@@ -778,6 +937,172 @@
               reader.onerror = (err) => reject(err);
           });
       };
+
+      // --- TEXT STUDIO LOGIC ---
+
+      textStudioBtn.addEventListener('click', () => {
+          plusMenu.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+          const icon = plusBtn.firstElementChild;
+          if(icon) icon.classList.remove('rotate-45');
+          
+          // Reset Temp State to Current
+          tsTempStyle = JSON.parse(JSON.stringify(currentUserStyle));
+          tsTarget = 'username';
+          tsActiveType = tsTempStyle.username.colorType;
+          
+          updateTSUI();
+          toggleModal(textModal, true);
+      });
+
+      closeTextBtn.addEventListener('click', () => toggleModal(textModal, false));
+
+      tsTabUsername.addEventListener('click', () => {
+          tsTarget = 'username';
+          tsActiveType = tsTempStyle.username.colorType;
+          updateTSUI();
+      });
+
+      tsTabText.addEventListener('click', () => {
+          tsTarget = 'message';
+          tsActiveType = tsTempStyle.message.colorType;
+          updateTSUI();
+      });
+
+      tsTypeBtns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+              tsActiveType = e.target.getAttribute('data-type');
+              tsTempStyle[tsTarget].colorType = tsActiveType;
+              
+              // Set a default if switching types
+              if (tsActiveType === 'solid') tsTempStyle[tsTarget].value = '#ffffff';
+              if (tsActiveType === 'gradient') tsTempStyle[tsTarget].value = GRADIENTS[0];
+              if (tsActiveType === 'neon') tsTempStyle[tsTarget].value = '#ff00ff';
+              
+              updateTSUI();
+          });
+      });
+
+      function updateTSUI() {
+          // Update Tabs Look
+          if (tsTarget === 'username') {
+              tsTabUsername.className = "flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-lg";
+              tsTabText.className = "flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all";
+          } else {
+              tsTabUsername.className = "flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all";
+              tsTabText.className = "flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-lg";
+          }
+
+          // Update Type Buttons Look
+          tsTypeBtns.forEach(btn => {
+              const type = btn.getAttribute('data-type');
+              if (type === tsActiveType) {
+                  btn.className = "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-all ts-type-btn active";
+              } else {
+                  btn.className = "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all ts-type-btn";
+              }
+          });
+
+          // Render Fonts
+          const currentFont = tsTempStyle[tsTarget].font;
+          tsCurrentFont.textContent = currentFont;
+          tsFontGrid.innerHTML = '';
+          FONTS.forEach(font => {
+              const div = document.createElement('div');
+              div.className = `ts-font-item text-center truncate ${font === currentFont ? 'ts-font-selected' : 'text-slate-400'}`;
+              div.style.fontFamily = font;
+              div.textContent = font;
+              div.onclick = () => {
+                  tsTempStyle[tsTarget].font = font;
+                  updateTSUI(); // Re-render to show selection
+              };
+              tsFontGrid.appendChild(div);
+          });
+
+          // Render Colors
+          const currentValue = tsTempStyle[tsTarget].value;
+          tsColorGrid.innerHTML = '';
+          let sourceArray = [];
+          if (tsActiveType === 'solid') sourceArray = SOLID_COLORS;
+          else if (tsActiveType === 'gradient') sourceArray = GRADIENTS;
+          else sourceArray = NEON_COLORS;
+
+          sourceArray.forEach(val => {
+              const div = document.createElement('div');
+              div.className = `h-10 rounded-lg ts-grid-item ${val === currentValue ? 'ts-selected' : ''}`;
+              
+              if (tsActiveType === 'solid' || tsActiveType === 'neon') {
+                  div.style.backgroundColor = val;
+              } else {
+                  div.style.background = val;
+              }
+
+              div.onclick = () => {
+                  tsTempStyle[tsTarget].value = val;
+                  updateTSUI();
+              };
+              tsColorGrid.appendChild(div);
+          });
+
+          // Update Preview
+          applyStyleToElement(tsPreviewUsername, tsTempStyle.username);
+          applyStyleToElement(tsPreviewText, tsTempStyle.message);
+      }
+
+      function applyStyleToElement(el, style) {
+          el.style.fontFamily = style.font;
+          
+          // Reset
+          el.style.color = '';
+          el.style.background = '';
+          el.style.webkitBackgroundClip = '';
+          el.style.textShadow = '';
+          el.style.display = '';
+
+          if (style.colorType === 'solid') {
+              el.style.color = style.value;
+          } else if (style.colorType === 'gradient') {
+              el.style.background = style.value;
+              el.style.webkitBackgroundClip = 'text';
+              el.style.color = 'transparent';
+              el.style.display = 'inline-block'; // Required for clip
+          } else if (style.colorType === 'neon') {
+              el.style.color = '#fff';
+              el.style.textShadow = `0 0 5px ${style.value}, 0 0 10px ${style.value}, 0 0 20px ${style.value}`;
+          }
+      }
+
+      tsSaveBtn.addEventListener('click', async () => {
+          const user = auth.currentUser;
+          if(!user) return;
+          
+          try {
+             tsSaveBtn.textContent = "Saving...";
+             tsSaveBtn.disabled = true;
+
+             // Update Global State
+             currentUserStyle = JSON.parse(JSON.stringify(tsTempStyle));
+
+             // Update Firestore
+             await updateDoc(doc(db, "users", user.uid), {
+                 style: currentUserStyle
+             });
+
+             // Update Online Status (so others see username change immediately)
+             await updateDoc(doc(db, "online", user.uid), {
+                 style: currentUserStyle.username // Only need username style here
+             });
+
+             toggleModal(textModal, false);
+
+          } catch(e) {
+              console.error(e);
+              alert("Failed to save styles.");
+          } finally {
+              tsSaveBtn.textContent = "Apply Styles";
+              tsSaveBtn.disabled = false;
+          }
+      });
+
 
       // --- PLUS MENU LOGIC ---
       plusBtn.addEventListener('click', (e) => {
@@ -827,6 +1152,7 @@
                 uid: user.uid,
                 displayName: user.displayName || user.email.split('@')[0],
                 photoURL: currentUserPfp || null,
+                style: currentUserStyle, // Pass current style snapshot
                 createdAt: serverTimestamp()
              });
 
@@ -968,6 +1294,7 @@
                 uid: user.uid,
                 displayName: user.displayName || user.email.split('@')[0],
                 photoURL: currentUserPfp || null,
+                style: currentUserStyle,
                 createdAt: serverTimestamp()
              });
 
@@ -1058,7 +1385,6 @@
               const likedBy = data.likedBy || [];
               const isLiked = likedBy.includes(currentUser.uid);
               
-              // FIND ICON DYNAMICALLY TO FIX RELOAD BUG
               const icon = likeBtn.querySelector('svg') || likeBtn.querySelector('i');
 
               if (isLiked) {
@@ -1170,10 +1496,8 @@
              profileSaveBtn.textContent = "Saving...";
              profileSaveBtn.disabled = true;
 
-             // 1. Update Auth Display Name
              await updateProfile(user, { displayName: newName });
              
-             // 2. Update Firestore
              await setDoc(doc(db, "users", user.uid), {
                  displayName: newName,
                  photoURL: newPfp || null,
@@ -1184,12 +1508,10 @@
                  bio: newBio
              }, { merge: true });
 
-             // 3. Update Local State
              currentUserPfp = newPfp || null;
              currentUserMood = newMood || null;
              updateHeaderAvatar(user.displayName, currentUserPfp);
              
-             // 4. Update Online Status
              await updateDoc(doc(db, "online", user.uid), {
                  displayName: newName,
                  photoURL: newPfp || null,
@@ -1211,11 +1533,9 @@
       likeBtn.addEventListener('click', async () => {
           if(!currentViewedProfileUid) return;
           const user = auth.currentUser;
-          if (user.uid === currentViewedProfileUid) return; // double check
+          if (user.uid === currentViewedProfileUid) return;
 
           const userRef = doc(db, "users", currentViewedProfileUid);
-          
-          // DYNAMIC QUERY for icon
           const icon = likeBtn.querySelector('svg') || likeBtn.querySelector('i');
           const isLiked = icon && icon.classList.contains('fill-pink-500');
           let currentCount = parseInt(likeCount.textContent.replace(/,/g, ''));
@@ -1350,6 +1670,10 @@
               pfp = data.photoURL || null; 
               mood = data.mood || null;
               name = data.displayName || name;
+              
+              if(data.style) {
+                  currentUserStyle = data.style;
+              }
           } else {
               await setDoc(userRef, {
                   coins: 10000,
@@ -1360,6 +1684,7 @@
                   photoURL: null,
                   mood: null,
                   bio: "",
+                  style: currentUserStyle,
                   createdAt: serverTimestamp()
               }, { merge: true });
           }
@@ -1415,6 +1740,7 @@
                 displayName: currentName,
                 photoURL: currentUserPfp || null,
                 mood: currentUserMood || null,
+                style: currentUserStyle.username || null, // Only sync username style
                 lastSeen: serverTimestamp()
             }, { merge: true });
         };
@@ -1455,8 +1781,10 @@
           const newPfp = data.photoURL || '';
           const newName = data.displayName || 'Ghost';
           const newMood = data.mood || '';
+          // Style stringified for diff check
+          const newStyleStr = JSON.stringify(data.style || {}); 
 
-          const generateInner = (pfp, name, mood) => {
+          const generateInner = (pfp, name, mood, styleObj) => {
               let avatarHTML;
               if (pfp && pfp !== 'null') {
                   avatarHTML = `<img src="${pfp}" class="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-indigo-500/50">`;
@@ -1469,13 +1797,25 @@
               
               const moodHTML = mood ? `<div class="text-[10px] font-bold italic text-indigo-300 truncate pointer-events-none mt-0.5">${mood}</div>` : '';
 
+              // Apply User Style
+              let nameStyle = `font-family: ${styleObj.font || 'Inter'};`;
+              if (styleObj.colorType === 'solid') {
+                  nameStyle += `color: ${styleObj.value};`;
+              } else if (styleObj.colorType === 'gradient') {
+                  nameStyle += `background: ${styleObj.value}; -webkit-background-clip: text; color: transparent; display: inline-block;`;
+              } else if (styleObj.colorType === 'neon') {
+                  nameStyle += `color: #fff; text-shadow: 0 0 5px ${styleObj.value}, 0 0 10px ${styleObj.value};`;
+              } else {
+                  nameStyle += `color: #cbd5e1;`; // Default slate-300
+              }
+
               return `
                  <div class="relative pointer-events-none shrink-0">
                    ${avatarHTML}
                    <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-slate-900 rounded-full"></div>
                  </div>
                  <div class="flex flex-col min-w-0 overflow-hidden">
-                    <span class="text-sm font-medium text-slate-400 group-hover:text-slate-200 transition-colors truncate pointer-events-none leading-tight">${name}</span>
+                    <span class="text-sm font-medium transition-colors truncate pointer-events-none leading-tight" style="${nameStyle}">${name}</span>
                     ${moodHTML}
                  </div>
               `;
@@ -1485,12 +1825,14 @@
              const currentPfp = existing.getAttribute('data-pfp') || '';
              const currentName = existing.getAttribute('data-name');
              const currentMood = existing.getAttribute('data-mood') || '';
+             const currentStyle = existing.getAttribute('data-style') || '{}';
              
-             if (currentPfp !== newPfp || currentName !== newName || currentMood !== newMood) {
-                 existing.innerHTML = generateInner(newPfp, newName, newMood);
+             if (currentPfp !== newPfp || currentName !== newName || currentMood !== newMood || currentStyle !== newStyleStr) {
+                 existing.innerHTML = generateInner(newPfp, newName, newMood, data.style || {});
                  existing.setAttribute('data-pfp', newPfp);
                  existing.setAttribute('data-name', newName);
                  existing.setAttribute('data-mood', newMood);
+                 existing.setAttribute('data-style', newStyleStr);
                  try { lucide.createIcons({ root: existing }); } catch(e) { }
              }
           } else {
@@ -1500,8 +1842,9 @@
              div.setAttribute('data-pfp', newPfp);
              div.setAttribute('data-name', newName);
              div.setAttribute('data-mood', newMood);
+             div.setAttribute('data-style', newStyleStr);
              div.onclick = () => openProfile(data.uid); 
-             div.innerHTML = generateInner(newPfp, newName, newMood);
+             div.innerHTML = generateInner(newPfp, newName, newMood, data.style || {});
              usersList.appendChild(div);
              try { lucide.createIcons({ root: div }); } catch(e) { }
           }
@@ -1552,14 +1895,42 @@
              </div>
            `;
         } else {
-           contentHTML = `<p class="text-slate-300 text-[15px] leading-normal break-words whitespace-pre-wrap">${data.text}</p>`;
+           // Parse styles for message text
+           let textStyle = `font-family: ${data.style?.message?.font || 'Inter'};`;
+           const sObj = data.style?.message || {};
+           
+           if (sObj.colorType === 'solid') {
+               textStyle += `color: ${sObj.value};`;
+           } else if (sObj.colorType === 'gradient') {
+               textStyle += `background: ${sObj.value}; -webkit-background-clip: text; color: transparent; display: inline-block;`;
+           } else if (sObj.colorType === 'neon') {
+               textStyle += `color: #fff; text-shadow: 0 0 5px ${sObj.value}, 0 0 10px ${sObj.value};`;
+           } else {
+               textStyle += `color: #cbd5e1;`;
+           }
+
+           contentHTML = `<p class="text-[15px] leading-normal break-words whitespace-pre-wrap" style="${textStyle}">${data.text}</p>`;
+        }
+
+        // Parse styles for Username
+        let nameStyle = `font-family: ${data.style?.username?.font || 'Inter'};`;
+        const uObj = data.style?.username || {};
+        
+        if (uObj.colorType === 'solid') {
+            nameStyle += `color: ${uObj.value};`;
+        } else if (uObj.colorType === 'gradient') {
+            nameStyle += `background: ${uObj.value}; -webkit-background-clip: text; color: transparent; display: inline-block;`;
+        } else if (uObj.colorType === 'neon') {
+            nameStyle += `color: #fff; text-shadow: 0 0 5px ${uObj.value}, 0 0 10px ${uObj.value};`;
+        } else {
+            nameStyle += `color: #e2e8f0;`;
         }
 
         div.innerHTML = `
           ${avatarHTML}
           <div class="flex flex-col min-w-0 flex-1">
             <div class="flex items-baseline gap-2">
-               <span class="font-bold text-slate-200 hover:underline cursor-pointer" onclick="openProfile('${data.uid}')">${data.displayName}</span>
+               <span class="font-bold hover:underline cursor-pointer" style="${nameStyle}" onclick="openProfile('${data.uid}')">${data.displayName}</span>
                <span class="text-[10px] text-slate-600 group-hover:text-slate-500 transition-colors">${timeString}</span>
             </div>
             ${contentHTML}
@@ -1598,6 +1969,7 @@
                 photoURL: null,
                 mood: null,
                 bio: "",
+                style: currentUserStyle,
                 createdAt: serverTimestamp()
             });
           }
@@ -1630,6 +2002,7 @@
             uid: user.uid,
             displayName: user.displayName || user.email.split('@')[0],
             photoURL: currentUserPfp || null,
+            style: currentUserStyle, // Add style
             createdAt: serverTimestamp()
           });
         } catch (error) {
