@@ -395,11 +395,6 @@
                  <i data-lucide="sparkles" class="w-5 h-5"></i>
                  <span class="absolute left-12 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">FX</span>
                </button>
-               <!-- Motion Studio (New) -->
-               <button type="button" id="motion-studio-btn" class="w-10 h-10 rounded-full bg-amber-600 hover:bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/30 transition-all hover:scale-110 active:scale-95 group">
-                 <i data-lucide="activity" class="w-5 h-5"></i>
-                 <span class="absolute left-12 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Motion</span>
-               </button>
                <!-- Upload -->
                <button type="button" id="chat-upload-btn" class="w-10 h-10 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all hover:scale-110 active:scale-95 group">
                  <i data-lucide="image" class="w-5 h-5"></i>
@@ -503,50 +498,6 @@
                    <div class="flex-1 overflow-y-auto pr-2">
                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Choose Effect (100+)</label>
                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="fx-grid"></div>
-                   </div>
-               </div>
-           </div>
-        </div>
-    </div>
-
-    <!-- MOTION STUDIO MODAL -->
-    <div id="motion-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
-        <div class="relative w-full max-w-4xl p-4 animate-pop h-[90vh]">
-           <div class="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl flex flex-col md:flex-row gap-6 bg-[#0f172a] h-full overflow-hidden">
-               <button id="close-motion-btn" class="absolute top-6 right-6 z-20 text-slate-400 hover:text-white transition-colors p-2 bg-black/50 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
-               
-               <!-- Preview -->
-               <div class="w-full md:w-1/3 bg-black/40 rounded-2xl p-6 flex flex-col justify-center items-center border border-white/5 shrink-0 relative overflow-hidden">
-                   <div class="text-xs font-mono uppercase text-slate-500 absolute top-4 left-4">Live Preview</div>
-                   <div class="space-y-8 w-full text-center">
-                       <!-- Username Motion Preview -->
-                       <div class="p-6 bg-slate-900/50 rounded-xl border border-white/5">
-                           <div class="text-xs text-slate-500 mb-4">Username Animation</div>
-                           <span id="motion-preview-username" class="text-2xl font-bold text-white inline-block">Ghost Walker</span>
-                       </div>
-                       
-                       <!-- Profile Motion Preview -->
-                       <div class="p-6 bg-slate-900/50 rounded-xl border border-white/5 flex flex-col items-center">
-                           <div class="text-xs text-slate-500 mb-4">Profile Picture Animation</div>
-                           <div class="w-20 h-20 rounded-full bg-indigo-500 flex items-center justify-center overflow-hidden border-2 border-white/20">
-                               <div id="motion-preview-pfp" class="w-full h-full flex items-center justify-center bg-indigo-600">
-                                   <i data-lucide="ghost" class="w-10 h-10 text-white"></i>
-                               </div>
-                           </div>
-                       </div>
-                   </div>
-                   <button id="motion-save-btn" class="mt-8 px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold shadow-lg shadow-amber-500/20 transition-all active:scale-95">Apply Motion</button>
-               </div>
-
-               <!-- Controls -->
-               <div class="flex-1 flex flex-col min-h-0">
-                   <div class="flex p-1 bg-slate-800/80 rounded-xl mb-4 shrink-0">
-                       <button class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-amber-600 text-white shadow-lg" id="motion-tab-username">Username Effects</button>
-                       <button class="flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all" id="motion-tab-profile">Profile Effects</button>
-                   </div>
-                   <div class="flex-1 overflow-y-auto pr-2">
-                       <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Choose Animation (100+)</label>
-                       <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="motion-grid"></div>
                    </div>
                </div>
            </div>
@@ -848,17 +799,6 @@
       const fxPreviewCard = document.getElementById('fx-preview-card');
       const fxSaveBtn = document.getElementById('fx-save-btn');
 
-      // Motion Studio Elements
-      const motionModal = document.getElementById('motion-modal');
-      const closeMotionBtn = document.getElementById('close-motion-btn');
-      const motionStudioBtn = document.getElementById('motion-studio-btn');
-      const motionTabUsername = document.getElementById('motion-tab-username');
-      const motionTabProfile = document.getElementById('motion-tab-profile');
-      const motionGrid = document.getElementById('motion-grid');
-      const motionPreviewUsername = document.getElementById('motion-preview-username');
-      const motionPreviewPfp = document.getElementById('motion-preview-pfp');
-      const motionSaveBtn = document.getElementById('motion-save-btn');
-
       // Hidden inputs
       const fileInputAvatar = document.getElementById('file-input-avatar');
       const fileInputBanner = document.getElementById('file-input-banner');
@@ -909,9 +849,7 @@
           username: { colorType: 'solid', value: '#ffffff', font: 'Inter' },
           message: { colorType: 'solid', value: '#e2e8f0', font: 'Inter' },
           profileBG: 'none',
-          cardBG: 'none',
-          usernameMotion: 'none',
-          profileMotion: 'none'
+          cardBG: 'none'
       };
 
       // Paint State
@@ -927,10 +865,6 @@
       // FX Studio State
       let fxTarget = 'profile'; // 'profile' or 'card'
       let fxTempStyle = JSON.parse(JSON.stringify(currentUserStyle));
-
-      // Motion Studio State
-      let motionTarget = 'username'; // 'username' or 'profile'
-      let motionTempStyle = JSON.parse(JSON.stringify(currentUserStyle));
 
       // DATA ARRAYS
       const FONTS = [
@@ -1027,117 +961,6 @@
       const PROFILE_BGS = TEXTURES; // 100+ items
       const CARD_BGS = TEXTURES;    // 100+ items
 
-      // --- MOTION STUDIO GENERATOR ---
-      function generateMotionStyles() {
-          let css = "";
-          const speeds = ['0.5s', '1s', '1.5s', '2s', '3s', '0.2s', '0.1s', '5s', '0.8s', '1.2s'];
-          const intensities = ['5px', '10px', '20px', '2px', '50px', '15px', '30px', '100px', '1px', '8px'];
-          const motionClasses = []; // Stores objects { name: 'Shake 1', class: 'motion-shake-1' }
-
-          motionClasses.push({name: 'None', class: 'none'});
-
-          // 1. Shakes X (10)
-          for(let i=0; i<10; i++) {
-             css += `@keyframes shake-x-${i} { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-${intensities[i]}); } 75% { transform: translateX(${intensities[i]}); } }`;
-             css += `.motion-shake-x-${i} { animation: shake-x-${i} ${speeds[i]} infinite ease-in-out; display: inline-block; }`;
-             motionClasses.push({name: `Shake X ${i+1}`, class: `motion-shake-x-${i}`});
-          }
-
-          // 2. Shakes Y (10)
-          for(let i=0; i<10; i++) {
-             css += `@keyframes shake-y-${i} { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-${intensities[i]}); } 75% { transform: translateY(${intensities[i]}); } }`;
-             css += `.motion-shake-y-${i} { animation: shake-y-${i} ${speeds[i]} infinite ease-in-out; display: inline-block; }`;
-             motionClasses.push({name: `Shake Y ${i+1}`, class: `motion-shake-y-${i}`});
-          }
-
-          // 3. Pulse Scale (10)
-          for(let i=0; i<10; i++) {
-             const scale = 1 + (i+1)*0.05;
-             css += `@keyframes pulse-scale-${i} { 0%, 100% { transform: scale(1); } 50% { transform: scale(${scale}); } }`;
-             css += `.motion-pulse-${i} { animation: pulse-scale-${i} ${speeds[i]} infinite ease-in-out; display: inline-block; }`;
-             motionClasses.push({name: `Pulse ${i+1}`, class: `motion-pulse-${i}`});
-          }
-
-          // 4. Spin (10)
-          for(let i=0; i<10; i++) {
-             css += `@keyframes spin-${i} { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`;
-             css += `.motion-spin-${i} { animation: spin-${i} ${speeds[i]} linear infinite; display: inline-block; }`;
-             motionClasses.push({name: `Spin ${i+1}`, class: `motion-spin-${i}`});
-          }
-
-          // 5. Spin CCW (10)
-          for(let i=0; i<10; i++) {
-             css += `@keyframes spin-ccw-${i} { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }`;
-             css += `.motion-spin-ccw-${i} { animation: spin-ccw-${i} ${speeds[i]} linear infinite; display: inline-block; }`;
-             motionClasses.push({name: `Spin CCW ${i+1}`, class: `motion-spin-ccw-${i}`});
-          }
-
-          // 6. Bounce (10)
-          for(let i=0; i<10; i++) {
-             css += `@keyframes bounce-${i} { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-${intensities[i]}); } }`;
-             css += `.motion-bounce-${i} { animation: bounce-${i} ${speeds[i]} infinite ease-in-out; display: inline-block; }`;
-             motionClasses.push({name: `Bounce ${i+1}`, class: `motion-bounce-${i}`});
-          }
-
-          // 7. Glitch (Clip Path) (10) - Simplified glitch effect
-          for(let i=0; i<10; i++) {
-             css += `@keyframes glitch-${i} { 
-                0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
-                20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
-                40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); }
-                60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
-                80% { clip-path: inset(10% 0 60% 0); transform: translate(-1px, 1px); }
-                100% { clip-path: inset(30% 0 30% 0); transform: translate(1px, -1px); }
-             }`;
-             css += `.motion-glitch-${i} { animation: glitch-${i} ${speeds[i]} infinite linear alternate-reverse; display: inline-block; }`;
-             motionClasses.push({name: `Glitch ${i+1}`, class: `motion-glitch-${i}`});
-          }
-
-          // 8. Rainbow Flow (Hue Rotate) (10)
-          for(let i=0; i<10; i++) {
-             css += `@keyframes rainbow-${i} { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }`;
-             css += `.motion-rainbow-${i} { animation: rainbow-${i} ${speeds[i]} linear infinite; display: inline-block; }`;
-             motionClasses.push({name: `Rainbow ${i+1}`, class: `motion-rainbow-${i}`});
-          }
-
-          // 9. Wobble (Rotate) (10)
-          for(let i=0; i<10; i++) {
-             const deg = (i+1) * 3;
-             css += `@keyframes wobble-${i} { 0%, 100% { transform: rotate(-${deg}deg); } 50% { transform: rotate(${deg}deg); } }`;
-             css += `.motion-wobble-${i} { animation: wobble-${i} ${speeds[i]} infinite ease-in-out; display: inline-block; }`;
-             motionClasses.push({name: `Wobble ${i+1}`, class: `motion-wobble-${i}`});
-          }
-
-          // 10. Glow Pulse (10)
-          for(let i=0; i<10; i++) {
-             css += `@keyframes glow-pulse-${i} { 0%, 100% { filter: drop-shadow(0 0 2px ${NEON_COLORS[i]}); } 50% { filter: drop-shadow(0 0 15px ${NEON_COLORS[i]}); } }`;
-             css += `.motion-glow-${i} { animation: glow-pulse-${i} ${speeds[i]} infinite ease-in-out; display: inline-block; }`;
-             motionClasses.push({name: `Glow ${i+1}`, class: `motion-glow-${i}`});
-          }
-
-          // 11. Jelly (Scale XY) (10)
-          for(let i=0; i<10; i++) {
-             css += `@keyframes jelly-${i} { 0%, 100% { transform: scale(1, 1); } 25% { transform: scale(0.9, 1.1); } 50% { transform: scale(1.1, 0.9); } 75% { transform: scale(0.95, 1.05); } }`;
-             css += `.motion-jelly-${i} { animation: jelly-${i} ${speeds[i]} infinite; display: inline-block; }`;
-             motionClasses.push({name: `Jelly ${i+1}`, class: `motion-jelly-${i}`});
-          }
-
-          // 12. Fade/Blur (10)
-          for(let i=0; i<10; i++) {
-             css += `@keyframes blur-${i} { 0%, 100% { filter: blur(0px); opacity: 1; } 50% { filter: blur(2px); opacity: 0.7; } }`;
-             css += `.motion-blur-${i} { animation: blur-${i} ${speeds[i]} infinite; display: inline-block; }`;
-             motionClasses.push({name: `Blur ${i+1}`, class: `motion-blur-${i}`});
-          }
-
-          const styleEl = document.createElement('style');
-          styleEl.innerHTML = css;
-          document.head.appendChild(styleEl);
-
-          return motionClasses;
-      }
-
-      const MOTION_CLASSES = generateMotionStyles();
-
       // Initialize Icons
       lucide.createIcons();
 
@@ -1192,108 +1015,6 @@
               reader.onerror = (err) => reject(err);
           });
       };
-
-      // --- MOTION STUDIO LOGIC ---
-      motionStudioBtn.addEventListener('click', () => {
-          plusMenu.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
-          const icon = plusBtn.firstElementChild;
-          if(icon) icon.classList.remove('rotate-45');
-
-          // Reset
-          motionTempStyle = JSON.parse(JSON.stringify(currentUserStyle));
-          motionTarget = 'username';
-          updateMotionUI();
-          toggleModal(motionModal, true);
-      });
-
-      closeMotionBtn.addEventListener('click', () => toggleModal(motionModal, false));
-
-      motionTabUsername.addEventListener('click', () => {
-          motionTarget = 'username';
-          updateMotionUI();
-      });
-
-      motionTabProfile.addEventListener('click', () => {
-          motionTarget = 'profile';
-          updateMotionUI();
-      });
-
-      function updateMotionUI() {
-          // Tabs
-          if (motionTarget === 'username') {
-              motionTabUsername.className = "flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-amber-600 text-white shadow-lg";
-              motionTabProfile.className = "flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all";
-          } else {
-              motionTabUsername.className = "flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all";
-              motionTabProfile.className = "flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-amber-600 text-white shadow-lg";
-          }
-
-          // Grid
-          motionGrid.innerHTML = '';
-          const current = motionTarget === 'username' ? motionTempStyle.usernameMotion : motionTempStyle.profileMotion;
-
-          MOTION_CLASSES.forEach((opt, idx) => {
-              const div = document.createElement('div');
-              div.className = `h-16 rounded-lg ts-grid-item flex items-center justify-center text-xs font-bold text-slate-300 hover:text-white bg-slate-800 ${opt.class === current ? 'ts-selected' : ''}`;
-              div.textContent = opt.name;
-              
-              div.onclick = () => {
-                  if(motionTarget === 'username') motionTempStyle.usernameMotion = opt.class;
-                  else motionTempStyle.profileMotion = opt.class;
-                  updateMotionUI();
-              };
-              motionGrid.appendChild(div);
-          });
-
-          // Preview
-          // Username
-          motionPreviewUsername.className = "text-2xl font-bold text-white inline-block"; // reset
-          if (motionTempStyle.usernameMotion && motionTempStyle.usernameMotion !== 'none') {
-              motionPreviewUsername.classList.add(motionTempStyle.usernameMotion);
-          }
-          
-          // Profile
-          motionPreviewPfp.className = "w-full h-full flex items-center justify-center bg-indigo-600"; // reset
-          if (motionTempStyle.profileMotion && motionTempStyle.profileMotion !== 'none') {
-              motionPreviewPfp.classList.add(motionTempStyle.profileMotion);
-          }
-      }
-
-      motionSaveBtn.addEventListener('click', async () => {
-          const user = auth.currentUser;
-          if(!user) return;
-          
-          try {
-             motionSaveBtn.textContent = "Saving...";
-             motionSaveBtn.disabled = true;
-
-             currentUserStyle = JSON.parse(JSON.stringify(motionTempStyle));
-
-             // Update Firestore
-             await updateDoc(doc(db, "users", user.uid), {
-                 style: currentUserStyle
-             });
-
-             // Update Online Status
-             await updateDoc(doc(db, "online", user.uid), {
-                 style: {
-                     username: currentUserStyle.username,
-                     cardBG: currentUserStyle.cardBG,
-                     usernameMotion: currentUserStyle.usernameMotion,
-                     profileMotion: currentUserStyle.profileMotion
-                 } 
-             });
-
-             toggleModal(motionModal, false);
-
-          } catch(e) {
-              console.error(e);
-              alert("Failed to save Motion.");
-          } finally {
-              motionSaveBtn.textContent = "Apply Motion";
-              motionSaveBtn.disabled = false;
-          }
-      });
 
       // --- FX STUDIO LOGIC ---
       fxStudioBtn.addEventListener('click', () => {
@@ -1393,9 +1114,7 @@
              await updateDoc(doc(db, "online", user.uid), {
                  style: {
                      username: currentUserStyle.username,
-                     cardBG: currentUserStyle.cardBG,
-                     usernameMotion: currentUserStyle.usernameMotion,
-                     profileMotion: currentUserStyle.profileMotion
+                     cardBG: currentUserStyle.cardBG
                  } 
              });
 
@@ -1563,9 +1282,7 @@
              await updateDoc(doc(db, "online", user.uid), {
                  style: {
                      username: currentUserStyle.username,
-                     cardBG: currentUserStyle.cardBG || 'none',
-                     usernameMotion: currentUserStyle.usernameMotion,
-                     profileMotion: currentUserStyle.profileMotion
+                     cardBG: currentUserStyle.cardBG || 'none'
                  }
              });
 
@@ -1865,12 +1582,6 @@
                   profilePfpPlaceholder.classList.add('hidden');
               }
 
-              // Apply Profile Motion to Avatar inside modal
-              profilePfpImg.className = "w-full h-full object-cover hidden"; // Reset class first
-              if(data.style && data.style.profileMotion && data.style.profileMotion !== 'none') {
-                  profilePfpImg.classList.add(data.style.profileMotion);
-              }
-
               // Setup Likes
               const likes = data.likes || 0;
               likeCount.textContent = formatNumber(likes);
@@ -2013,9 +1724,7 @@
                  mood: newMood || null,
                  style: {
                      username: currentUserStyle.username,
-                     cardBG: currentUserStyle.cardBG || 'none',
-                     usernameMotion: currentUserStyle.usernameMotion,
-                     profileMotion: currentUserStyle.profileMotion
+                     cardBG: currentUserStyle.cardBG || 'none'
                  }
              });
 
@@ -2243,9 +1952,7 @@
                 mood: currentUserMood || null,
                 style: {
                     username: currentUserStyle.username,
-                    cardBG: currentUserStyle.cardBG || 'none',
-                    usernameMotion: currentUserStyle.usernameMotion,
-                    profileMotion: currentUserStyle.profileMotion
+                    cardBG: currentUserStyle.cardBG || 'none'
                 },
                 lastSeen: serverTimestamp()
             }, { merge: true });
@@ -2291,14 +1998,11 @@
 
           const generateInner = (pfp, name, mood, styleObj) => {
               let avatarHTML;
-              // Motion Check
-              const profileMotionClass = (styleObj.profileMotion && styleObj.profileMotion !== 'none') ? styleObj.profileMotion : '';
-              
               if (pfp && pfp !== 'null') {
-                  avatarHTML = `<img src="${pfp}" class="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-indigo-500/50 ${profileMotionClass}">`;
+                  avatarHTML = `<img src="${pfp}" class="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-indigo-500/50">`;
               } else {
                   avatarHTML = `
-                   <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border border-white/10 group-hover:border-indigo-500/50 transition-colors ${profileMotionClass}">
+                   <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border border-white/10 group-hover:border-indigo-500/50 transition-colors">
                      <i data-lucide="ghost" class="w-4 h-4 text-slate-400 group-hover:text-indigo-400"></i>
                    </div>`;
               }
@@ -2317,9 +2021,6 @@
               } else {
                   nameStyle += `color: #cbd5e1;`; // Default slate-300
               }
-              
-              // Motion for Username
-              const userMotionClass = (styleObj.usernameMotion && styleObj.usernameMotion !== 'none') ? styleObj.usernameMotion : '';
 
               return `
                  <div class="relative pointer-events-none shrink-0">
@@ -2327,7 +2028,7 @@
                    <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-slate-900 rounded-full"></div>
                  </div>
                  <div class="flex flex-col min-w-0 overflow-hidden">
-                    <span class="text-sm font-medium transition-colors truncate pointer-events-none leading-tight ${userMotionClass}" style="${nameStyle}">${name}</span>
+                    <span class="text-sm font-medium transition-colors truncate pointer-events-none leading-tight" style="${nameStyle}">${name}</span>
                     ${moodHTML}
                  </div>
               `;
@@ -2399,16 +2100,12 @@
             timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        // Motion Classes
-        const profileMotion = data.style && data.style.profileMotion ? data.style.profileMotion : '';
-        const usernameMotion = data.style && data.style.usernameMotion ? data.style.usernameMotion : '';
-
         let avatarHTML = '';
         if (data.photoURL) {
-            avatarHTML = `<img src="${data.photoURL}" class="w-10 h-10 mt-1 rounded-full object-cover shrink-0 border border-transparent group-hover:border-indigo-500/20 cursor-pointer ${profileMotion}" onclick="openProfile('${data.uid}')">`;
+            avatarHTML = `<img src="${data.photoURL}" class="w-10 h-10 mt-1 rounded-full object-cover shrink-0 border border-transparent group-hover:border-indigo-500/20 cursor-pointer" onclick="openProfile('${data.uid}')">`;
         } else {
             avatarHTML = `
-            <div class="w-10 h-10 mt-1 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0 border border-transparent group-hover:border-indigo-500/20 transition-colors cursor-pointer ${profileMotion}" onclick="openProfile('${data.uid}')">
+            <div class="w-10 h-10 mt-1 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0 border border-transparent group-hover:border-indigo-500/20 transition-colors cursor-pointer" onclick="openProfile('${data.uid}')">
                 <i data-lucide="ghost" class="w-5 h-5 text-indigo-400"></i>
             </div>`;
         }
@@ -2456,7 +2153,7 @@
           ${avatarHTML}
           <div class="flex flex-col min-w-0 flex-1">
             <div class="flex items-baseline gap-2">
-               <span class="font-bold hover:underline cursor-pointer ${usernameMotion}" style="${nameStyle}" onclick="openProfile('${data.uid}')">${data.displayName}</span>
+               <span class="font-bold hover:underline cursor-pointer" style="${nameStyle}" onclick="openProfile('${data.uid}')">${data.displayName}</span>
                <span class="text-[10px] text-slate-600 group-hover:text-slate-500 transition-colors">${timeString}</span>
             </div>
             ${contentHTML}
