@@ -647,7 +647,7 @@
       const likeCount = document.getElementById('like-count');
       
       const toggleViewBtn = document.getElementById('toggle-view-btn');
-      const toggleViewIcon = document.getElementById('toggle-view-icon');
+      // const toggleViewIcon removed because it gets stale
 
       // Paint Modal Elements
       const paintModal = document.getElementById('paint-modal');
@@ -772,7 +772,9 @@
         plusMenu.classList.toggle('opacity-0');
         plusMenu.classList.toggle('translate-y-4');
         plusMenu.classList.toggle('pointer-events-none');
-        plusBtn.querySelector('i').classList.toggle('rotate-45'); // Rotate icon to 'x' position
+        // Find SVG or icon child
+        const icon = plusBtn.firstElementChild;
+        if(icon) icon.classList.toggle('rotate-45'); 
       });
 
       // Close menu when clicking outside
@@ -782,7 +784,8 @@
              plusMenu.classList.add('opacity-0');
              plusMenu.classList.add('translate-y-4');
              plusMenu.classList.add('pointer-events-none');
-             plusBtn.querySelector('i').classList.remove('rotate-45');
+             const icon = plusBtn.firstElementChild;
+             if(icon) icon.classList.remove('rotate-45');
           }
         }
       });
@@ -794,7 +797,8 @@
           plusMenu.classList.add('opacity-0');
           plusMenu.classList.add('translate-y-4');
           plusMenu.classList.add('pointer-events-none');
-          plusBtn.querySelector('i').classList.remove('rotate-45');
+          const icon = plusBtn.firstElementChild;
+          if(icon) icon.classList.remove('rotate-45');
       });
 
       fileInputChat.addEventListener('change', async (e) => {
@@ -837,7 +841,8 @@
           plusMenu.classList.add('opacity-0');
           plusMenu.classList.add('translate-y-4');
           plusMenu.classList.add('pointer-events-none');
-          plusBtn.querySelector('i').classList.remove('rotate-45');
+          const icon = plusBtn.firstElementChild;
+          if(icon) icon.classList.remove('rotate-45');
           
           if(!ctx) initCanvas();
       });
@@ -845,6 +850,7 @@
       closePaintBtn.addEventListener('click', () => toggleModal(paintModal, false));
 
       function initCanvas() {
+         if(!paintCanvas) return;
          ctx = paintCanvas.getContext('2d');
          // Set default styles
          ctx.lineCap = 'round';
@@ -884,6 +890,7 @@
       }
 
       function startDrawing(e) {
+         if(!ctx) return;
          isDrawing = true;
          const rect = paintCanvas.getBoundingClientRect();
          // Scale for canvas resolution vs display size
@@ -895,7 +902,7 @@
       }
 
       function draw(e) {
-         if(!isDrawing) return;
+         if(!isDrawing || !ctx) return;
          const rect = paintCanvas.getBoundingClientRect();
          const scaleX = paintCanvas.width / rect.width;
          const scaleY = paintCanvas.height / rect.height;
@@ -905,7 +912,7 @@
       }
 
       function stopDrawing() {
-         if(isDrawing) {
+         if(isDrawing && ctx) {
              ctx.closePath();
              isDrawing = false;
          }
@@ -913,6 +920,7 @@
 
       // Tools
       paintColor.addEventListener('input', (e) => {
+          if(!ctx) return;
           isEraser = false;
           paintEraser.classList.remove('bg-indigo-600', 'text-white');
           paintEraser.classList.add('bg-slate-800', 'text-slate-300');
@@ -921,10 +929,12 @@
       });
 
       paintSize.addEventListener('input', (e) => {
+          if(!ctx) return;
           ctx.lineWidth = e.target.value;
       });
 
       paintEraser.addEventListener('click', () => {
+          if(!ctx) return;
           isEraser = !isEraser;
           if(isEraser) {
               paintEraser.classList.add('bg-indigo-600', 'text-white');
@@ -939,12 +949,13 @@
       });
 
       paintClear.addEventListener('click', () => {
+          if(!ctx) return;
           ctx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
       });
 
       paintSave.addEventListener('click', async () => {
           const user = auth.currentUser;
-          if(!user) return;
+          if(!user || !ctx) return;
           
           try {
              // Create a temporary canvas to add a background if desired, or just send transparent
@@ -1078,6 +1089,7 @@
       };
 
       function setProfileMode(mode) {
+          // Dynamic icon update
           if (mode === 'edit') {
               // Edit Mode
               profileUsername.disabled = false;
@@ -1087,8 +1099,7 @@
               bannerEditOverlay.classList.remove('hidden');
               pfpEditOverlay.classList.remove('hidden');
               
-              // Icon should show Eye (click to preview)
-              toggleViewIcon.setAttribute('data-lucide', 'eye');
+              toggleViewBtn.innerHTML = '<i data-lucide="eye" class="w-5 h-5"></i>';
               
           } else {
               // View Mode (Preview or Other)
@@ -1099,8 +1110,7 @@
               bannerEditOverlay.classList.add('hidden');
               pfpEditOverlay.classList.add('hidden');
 
-              // Icon should show Pencil (click to edit)
-              toggleViewIcon.setAttribute('data-lucide', 'pencil');
+              toggleViewBtn.innerHTML = '<i data-lucide="pencil" class="w-5 h-5"></i>';
           }
           lucide.createIcons();
       }
@@ -1188,8 +1198,9 @@
           const user = auth.currentUser;
           const userRef = doc(db, "users", currentViewedProfileUid);
           
-          const icon = likeBtn.querySelector('i');
-          const isLiked = icon.classList.contains('fill-pink-500');
+          // Use firstElementChild to get the SVG, since Lucide replaced the 'i'
+          const icon = likeBtn.firstElementChild; 
+          const isLiked = icon && icon.classList.contains('fill-pink-500');
           let currentCount = parseInt(likeCount.textContent.replace(/,/g, ''));
           
           if (isLiked) {
@@ -1202,11 +1213,13 @@
                  likedBy: arrayRemove(user.uid)
              });
           } else {
-             icon.classList.add('fill-pink-500', 'text-pink-500');
+             if(icon) {
+                 icon.classList.add('fill-pink-500', 'text-pink-500');
+                 icon.style.animation = 'none';
+                 void icon.offsetWidth;
+                 icon.style.animation = 'heartBeat 0.3s ease-in-out';
+             }
              likeBtn.classList.add('border-pink-500/30', 'bg-pink-500/10');
-             icon.style.animation = 'none';
-             void icon.offsetWidth;
-             icon.style.animation = 'heartBeat 0.3s ease-in-out';
              likeCount.textContent = formatNumber(currentCount + 1);
 
              await updateDoc(userRef, {
