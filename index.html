@@ -142,6 +142,19 @@
       .lightbox-open #lightbox-img {
         transform: scale(1);
       }
+
+      /* Canvas specific */
+      #paint-canvas {
+        cursor: crosshair;
+        touch-action: none;
+      }
+      input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+      input[type="color"]::-webkit-color-swatch {
+        border: none;
+        border-radius: 50%;
+      }
     </style>
   </head>
   <body>
@@ -336,7 +349,7 @@
             <!-- Plus Menu Popup -->
             <div id="plus-menu" class="absolute bottom-full left-4 mb-3 flex flex-col gap-3 transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-none z-10">
                <!-- Paint -->
-               <button type="button" class="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 transition-all hover:scale-110 active:scale-95 group">
+               <button type="button" id="paint-btn" class="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 transition-all hover:scale-110 active:scale-95 group">
                  <i data-lucide="palette" class="w-5 h-5"></i>
                  <span class="absolute left-12 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Paint</span>
                </button>
@@ -422,6 +435,68 @@
               </div>
            </div>
         </div>
+    </div>
+
+    <!-- PAINT STUDIO MODAL -->
+    <div id="paint-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+      <div class="relative w-full max-w-2xl p-4 animate-jump-in">
+        <div class="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl flex flex-col items-center gap-4 bg-[#0f172a]">
+           <!-- Header -->
+           <div class="w-full flex items-center justify-between border-b border-white/10 pb-4">
+              <div class="flex items-center gap-2">
+                 <i data-lucide="palette" class="w-5 h-5 text-indigo-400"></i>
+                 <span class="font-bold text-slate-200">Paint Studio</span>
+              </div>
+              <button id="close-paint-btn" class="text-slate-400 hover:text-white transition-colors p-1">
+                 <i data-lucide="x" class="w-6 h-6"></i>
+              </button>
+           </div>
+           
+           <!-- Canvas Area -->
+           <div class="relative rounded-lg overflow-hidden border border-white/10 shadow-inner bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAjyQc6WCgAgA0OezR/X669AAAAABJRU5ErkJggg==')]">
+              <canvas id="paint-canvas" width="500" height="500" class="block bg-transparent"></canvas>
+           </div>
+
+           <!-- Toolbar -->
+           <div class="w-full flex flex-wrap items-center justify-between gap-4 pt-2">
+              <div class="flex items-center gap-3">
+                 <!-- Color -->
+                 <div class="relative group">
+                    <input type="color" id="paint-color" value="#00ffff" class="w-10 h-10 rounded-full cursor-pointer bg-transparent overflow-hidden">
+                    <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] bg-black/80 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Color</div>
+                 </div>
+                 
+                 <!-- Size -->
+                 <div class="flex items-center gap-2 group relative">
+                    <i data-lucide="circle" class="w-3 h-3 text-slate-400"></i>
+                    <input type="range" id="paint-size" min="1" max="50" value="5" class="w-24 accent-indigo-500 cursor-pointer">
+                    <i data-lucide="circle" class="w-6 h-6 text-slate-400"></i>
+                    <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] bg-black/80 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Size</div>
+                 </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                  <!-- Eraser -->
+                  <button id="paint-eraser" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-white/5 relative group">
+                      <i data-lucide="eraser" class="w-5 h-5"></i>
+                      <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] bg-black/80 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Eraser</div>
+                  </button>
+                  
+                  <!-- Clear -->
+                  <button id="paint-clear" class="p-2 rounded-lg bg-slate-800 hover:bg-red-900/30 text-slate-300 hover:text-red-300 transition-colors border border-white/5 relative group">
+                      <i data-lucide="trash-2" class="w-5 h-5"></i>
+                      <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] bg-black/80 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Clear</div>
+                  </button>
+              </div>
+
+              <!-- Save -->
+              <button id="paint-save" class="px-6 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center gap-2">
+                 <span>Send Art</span>
+                 <i data-lucide="send" class="w-4 h-4"></i>
+              </button>
+           </div>
+        </div>
+      </div>
     </div>
 
     <!-- PROFILE MODAL (Used for both Edit and View) -->
@@ -574,6 +649,17 @@
       const toggleViewBtn = document.getElementById('toggle-view-btn');
       const toggleViewIcon = document.getElementById('toggle-view-icon');
 
+      // Paint Modal Elements
+      const paintModal = document.getElementById('paint-modal');
+      const closePaintBtn = document.getElementById('close-paint-btn');
+      const paintCanvas = document.getElementById('paint-canvas');
+      const paintColor = document.getElementById('paint-color');
+      const paintSize = document.getElementById('paint-size');
+      const paintEraser = document.getElementById('paint-eraser');
+      const paintClear = document.getElementById('paint-clear');
+      const paintSave = document.getElementById('paint-save');
+      const paintBtn = document.getElementById('paint-btn');
+
       // Hidden inputs
       const fileInputAvatar = document.getElementById('file-input-avatar');
       const fileInputBanner = document.getElementById('file-input-banner');
@@ -617,6 +703,11 @@
       let isEditingProfile = false;
       let isPreviewMode = false;
       let currentUserPfp = null; // Store locally to avoid re-fetching constantly
+
+      // Paint State
+      let ctx = null;
+      let isDrawing = false;
+      let isEraser = false;
 
       // Initialize Icons
       lucide.createIcons();
@@ -735,6 +826,149 @@
              } else {
                  alert("Failed to upload image.");
              }
+          }
+      });
+
+      // --- PAINT STUDIO LOGIC ---
+      
+      paintBtn.addEventListener('click', () => {
+          toggleModal(paintModal, true);
+          // Close plus menu
+          plusMenu.classList.add('opacity-0');
+          plusMenu.classList.add('translate-y-4');
+          plusMenu.classList.add('pointer-events-none');
+          plusBtn.querySelector('i').classList.remove('rotate-45');
+          
+          if(!ctx) initCanvas();
+      });
+
+      closePaintBtn.addEventListener('click', () => toggleModal(paintModal, false));
+
+      function initCanvas() {
+         ctx = paintCanvas.getContext('2d');
+         // Set default styles
+         ctx.lineCap = 'round';
+         ctx.lineJoin = 'round';
+         ctx.lineWidth = 5;
+         ctx.strokeStyle = '#00ffff';
+
+         // Mouse Events
+         paintCanvas.addEventListener('mousedown', startDrawing);
+         paintCanvas.addEventListener('mousemove', draw);
+         paintCanvas.addEventListener('mouseup', stopDrawing);
+         paintCanvas.addEventListener('mouseout', stopDrawing);
+
+         // Touch Events
+         paintCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent("mousedown", {
+               clientX: touch.clientX,
+               clientY: touch.clientY
+            });
+            paintCanvas.dispatchEvent(mouseEvent);
+         });
+         paintCanvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent("mousemove", {
+               clientX: touch.clientX,
+               clientY: touch.clientY
+            });
+            paintCanvas.dispatchEvent(mouseEvent);
+         });
+         paintCanvas.addEventListener('touchend', () => {
+             const mouseEvent = new MouseEvent("mouseup", {});
+             paintCanvas.dispatchEvent(mouseEvent);
+         });
+      }
+
+      function startDrawing(e) {
+         isDrawing = true;
+         const rect = paintCanvas.getBoundingClientRect();
+         // Scale for canvas resolution vs display size
+         const scaleX = paintCanvas.width / rect.width;
+         const scaleY = paintCanvas.height / rect.height;
+         
+         ctx.beginPath();
+         ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+      }
+
+      function draw(e) {
+         if(!isDrawing) return;
+         const rect = paintCanvas.getBoundingClientRect();
+         const scaleX = paintCanvas.width / rect.width;
+         const scaleY = paintCanvas.height / rect.height;
+         
+         ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+         ctx.stroke();
+      }
+
+      function stopDrawing() {
+         if(isDrawing) {
+             ctx.closePath();
+             isDrawing = false;
+         }
+      }
+
+      // Tools
+      paintColor.addEventListener('input', (e) => {
+          isEraser = false;
+          paintEraser.classList.remove('bg-indigo-600', 'text-white');
+          paintEraser.classList.add('bg-slate-800', 'text-slate-300');
+          ctx.strokeStyle = e.target.value;
+          ctx.globalCompositeOperation = 'source-over';
+      });
+
+      paintSize.addEventListener('input', (e) => {
+          ctx.lineWidth = e.target.value;
+      });
+
+      paintEraser.addEventListener('click', () => {
+          isEraser = !isEraser;
+          if(isEraser) {
+              paintEraser.classList.add('bg-indigo-600', 'text-white');
+              paintEraser.classList.remove('bg-slate-800', 'text-slate-300');
+              ctx.globalCompositeOperation = 'destination-out';
+          } else {
+              paintEraser.classList.remove('bg-indigo-600', 'text-white');
+              paintEraser.classList.add('bg-slate-800', 'text-slate-300');
+              ctx.globalCompositeOperation = 'source-over';
+              ctx.strokeStyle = paintColor.value;
+          }
+      });
+
+      paintClear.addEventListener('click', () => {
+          ctx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
+      });
+
+      paintSave.addEventListener('click', async () => {
+          const user = auth.currentUser;
+          if(!user) return;
+          
+          try {
+             // Create a temporary canvas to add a background if desired, or just send transparent
+             // Sending transparent PNG
+             const base64 = paintCanvas.toDataURL('image/png');
+             
+             // Reuse existing message logic
+             await addDoc(collection(db, "messages"), {
+                text: "",
+                imageURL: base64,
+                type: "image",
+                uid: user.uid,
+                displayName: user.displayName || user.email.split('@')[0],
+                photoURL: currentUserPfp || null,
+                createdAt: serverTimestamp()
+             });
+
+             // Clear and close
+             ctx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
+             toggleModal(paintModal, false);
+
+          } catch(e) {
+              console.error(e);
+              alert("Failed to send masterpiece.");
           }
       });
 
