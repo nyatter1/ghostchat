@@ -657,7 +657,7 @@
       const pfpEditOverlay = document.getElementById('pfp-edit-overlay');
       
       const likeBtn = document.getElementById('like-btn');
-      const likeIcon = document.getElementById('like-icon');
+      // likeIcon variable removed to prevent stale reference
       const likeCount = document.getElementById('like-count');
       
       const toggleViewBtn = document.getElementById('toggle-view-btn');
@@ -1057,11 +1057,15 @@
               // Like Status Check
               const likedBy = data.likedBy || [];
               const isLiked = likedBy.includes(currentUser.uid);
+              
+              // FIND ICON DYNAMICALLY TO FIX RELOAD BUG
+              const icon = likeBtn.querySelector('svg') || likeBtn.querySelector('i');
+
               if (isLiked) {
-                  likeIcon.classList.add('fill-pink-500', 'text-pink-500');
+                  if(icon) icon.classList.add('fill-pink-500', 'text-pink-500');
                   likeBtn.classList.add('border-pink-500/30', 'bg-pink-500/10');
               } else {
-                  likeIcon.classList.remove('fill-pink-500', 'text-pink-500');
+                  if(icon) icon.classList.remove('fill-pink-500', 'text-pink-500');
                   likeBtn.classList.remove('border-pink-500/30', 'bg-pink-500/10');
               }
 
@@ -1210,12 +1214,14 @@
           if (user.uid === currentViewedProfileUid) return; // double check
 
           const userRef = doc(db, "users", currentViewedProfileUid);
-          const icon = likeBtn.firstElementChild; 
+          
+          // DYNAMIC QUERY for icon
+          const icon = likeBtn.querySelector('svg') || likeBtn.querySelector('i');
           const isLiked = icon && icon.classList.contains('fill-pink-500');
           let currentCount = parseInt(likeCount.textContent.replace(/,/g, ''));
           
           if (isLiked) {
-             icon.classList.remove('fill-pink-500', 'text-pink-500');
+             if(icon) icon.classList.remove('fill-pink-500', 'text-pink-500');
              likeBtn.classList.remove('border-pink-500/30', 'bg-pink-500/10');
              likeCount.textContent = formatNumber(currentCount - 1);
              
