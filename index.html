@@ -1552,6 +1552,7 @@
       });
 
       // --- PAINT STUDIO LOGIC ---
+          // --- PAINT STUDIO LOGIC ---
       paintBtn.addEventListener('click', () => {
           toggleModal(paintModal, true);
           plusMenu.classList.add('opacity-0');
@@ -1568,15 +1569,19 @@
       function initCanvas() {
          if(!paintCanvas) return;
          ctx = paintCanvas.getContext('2d');
-         // Resize canvas for better resolution on mobile
-         const rect = paintCanvas.parentElement.getBoundingClientRect();
-         paintCanvas.width = rect.width;
-         paintCanvas.height = rect.width; // Square aspect ratio
+         
+         // Set fixed high resolution for the buffer to ensure square aspect ratio and quality
+         // This avoids issues where the modal is animating or hidden when init runs
+         paintCanvas.width = 1024;
+         paintCanvas.height = 1024;
 
          ctx.lineCap = 'round';
          ctx.lineJoin = 'round';
-         ctx.lineWidth = 5;
-         ctx.strokeStyle = '#00ffff';
+         // Scale the initial line width because the canvas is large
+         ctx.lineWidth = (parseInt(paintSize.value) || 5) * 2;
+         ctx.strokeStyle = paintColor.value || '#00ffff';
+
+         const touchOpts = { passive: false };
 
          paintCanvas.addEventListener('mousedown', startDrawing);
          paintCanvas.addEventListener('mousemove', draw);
@@ -1584,32 +1589,36 @@
          paintCanvas.addEventListener('mouseout', stopDrawing);
 
          paintCanvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Prevent scrolling
             const touch = e.touches[0];
             const mouseEvent = new MouseEvent("mousedown", {
                clientX: touch.clientX,
                clientY: touch.clientY
             });
             paintCanvas.dispatchEvent(mouseEvent);
-         });
+         }, touchOpts);
+         
          paintCanvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Prevent scrolling
             const touch = e.touches[0];
             const mouseEvent = new MouseEvent("mousemove", {
                clientX: touch.clientX,
                clientY: touch.clientY
             });
             paintCanvas.dispatchEvent(mouseEvent);
-         });
-         paintCanvas.addEventListener('touchend', () => {
+         }, touchOpts);
+         
+         paintCanvas.addEventListener('touchend', (e) => {
+             e.preventDefault();
              const mouseEvent = new MouseEvent("mouseup", {});
              paintCanvas.dispatchEvent(mouseEvent);
-         });
+         }, touchOpts);
       }
 
       function startDrawing(e) {
          if(!ctx) return;
          isDrawing = true;
+         // Recalculate rect on every draw to handle window resizing/scrolling
          const rect = paintCanvas.getBoundingClientRect();
          const scaleX = paintCanvas.width / rect.width;
          const scaleY = paintCanvas.height / rect.height;
@@ -1646,7 +1655,8 @@
 
       paintSize.addEventListener('input', (e) => {
           if(!ctx) return;
-          ctx.lineWidth = e.target.value;
+          // Scale input value to match large canvas resolution
+          ctx.lineWidth = (parseInt(e.target.value) || 5) * 2;
       });
 
       paintEraser.addEventListener('click', () => {
@@ -1684,7 +1694,7 @@
                 displayName: user.displayName || user.email.split('@')[0],
                 photoURL: currentUserPfp || null,
                 style: currentUserStyle,
-                rank: currentUserRank, // Pass rank
+                rank: currentUserRank,
                 createdAt: serverTimestamp()
              });
 
