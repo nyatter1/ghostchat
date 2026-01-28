@@ -1414,42 +1414,82 @@
 
         const q = query(collection(db, "online"), orderBy("lastSeen", "desc"));
         unsubscribeUsers = onSnapshot(q, (snapshot) => {
-            usersList.innerHTML = '';
+            const validUids = new Set();
+            
             snapshot.forEach((doc) => {
                 const data = doc.data();
+                if (!data.uid) return;
+
                 const lastSeen = data.lastSeen ? data.lastSeen.toDate() : new Date();
                 const diff = (new Date() - lastSeen) / 1000 / 60; // mins
-                if (diff < 5) renderUser(data);
+                
+                // 5 minute timeout for online status
+                if (diff < 5) {
+                    validUids.add(data.uid);
+                    updateUserListElement(data);
+                }
+            });
+
+            // Cleanup stale users
+            Array.from(usersList.children).forEach(child => {
+               const uid = child.getAttribute('data-uid');
+               if(uid && !validUids.has(uid)) {
+                   child.remove();
+               }
             });
         });
 
         window.addEventListener("beforeunload", () => { deleteDoc(userRef); });
       }
 
-      function renderUser(data) {
-        const div = document.createElement('div');
-        div.className = "flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group opacity-0 animate-fade-in";
-        div.onclick = () => openProfile(data.uid); 
-        
-        let avatarHTML = '';
-        if (data.photoURL) {
-            avatarHTML = `<img src="${data.photoURL}" class="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-indigo-500/50">`;
-        } else {
-            avatarHTML = `
-             <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border border-white/10 group-hover:border-indigo-500/50 transition-colors">
-               <i data-lucide="ghost" class="w-4 h-4 text-slate-400 group-hover:text-indigo-400"></i>
-             </div>`;
-        }
+      function updateUserListElement(data) {
+          const existing = document.querySelector(`#users-list > div[data-uid="${data.uid}"]`);
+          
+          const newPfp = data.photoURL || '';
+          const newName = data.displayName || 'Ghost';
 
-        div.innerHTML = `
-           <div class="relative">
-             ${avatarHTML}
-             <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-slate-900 rounded-full"></div>
-           </div>
-           <span class="text-sm font-medium text-slate-400 group-hover:text-slate-200 transition-colors truncate">${data.displayName}</span>
-        `;
-        usersList.appendChild(div);
-        lucide.createIcons();
+          const generateInner = (pfp, name) => {
+              let avatarHTML;
+              if (pfp && pfp !== 'null') {
+                  avatarHTML = `<img src="${pfp}" class="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-indigo-500/50">`;
+              } else {
+                  avatarHTML = `
+                   <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border border-white/10 group-hover:border-indigo-500/50 transition-colors">
+                     <i data-lucide="ghost" class="w-4 h-4 text-slate-400 group-hover:text-indigo-400"></i>
+                   </div>`;
+              }
+              return `
+                 <div class="relative pointer-events-none">
+                   ${avatarHTML}
+                   <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-slate-900 rounded-full"></div>
+                 </div>
+                 <span class="text-sm font-medium text-slate-400 group-hover:text-slate-200 transition-colors truncate pointer-events-none">${name}</span>
+              `;
+          };
+
+          if (existing) {
+             const currentPfp = existing.getAttribute('data-pfp') || '';
+             const currentName = existing.getAttribute('data-name');
+             
+             // Diff Check: Only update DOM if PFP or Name changed
+             if (currentPfp !== newPfp || currentName !== newName) {
+                 existing.innerHTML = generateInner(newPfp, newName);
+                 existing.setAttribute('data-pfp', newPfp);
+                 existing.setAttribute('data-name', newName);
+                 try { lucide.createIcons({ root: existing }); } catch(e) { }
+             }
+          } else {
+             // Create New
+             const div = document.createElement('div');
+             div.className = "flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group animate-fade-in";
+             div.setAttribute('data-uid', data.uid);
+             div.setAttribute('data-pfp', newPfp);
+             div.setAttribute('data-name', newName);
+             div.onclick = () => openProfile(data.uid); 
+             div.innerHTML = generateInner(newPfp, newName);
+             usersList.appendChild(div);
+             try { lucide.createIcons({ root: div }); } catch(e) { }
+          }
       }
 
       function startChatListener() {
