@@ -207,6 +207,15 @@
       input, textarea {
         font-size: 16px; /* Prevent iOS zoom */
       }
+      
+      /* Sidebar Overlay for Mobile */
+      .sidebar-backdrop {
+          position: absolute;
+          inset: 0;
+          background: rgba(0,0,0,0.5);
+          backdrop-filter: blur(4px);
+          z-index: 30;
+      }
     </style>
   </head>
   <body>
@@ -346,42 +355,103 @@
     <!-- CHAT CONTAINER (Full Screen) -->
     <div id="chat-container" class="hidden fixed inset-0 z-50 w-full h-[100dvh] bg-slate-950 flex flex-row overflow-hidden">
       
-      <!-- Left Column: Chat Area -->
-      <div class="flex-1 flex flex-col relative h-full">
+      <!-- LEFT SIDEBAR -->
+      <div id="left-sidebar" class="bg-slate-900 border-r border-white/5 flex flex-col w-64 transition-all duration-300 fixed md:relative h-full z-40 left-0 -translate-x-full md:translate-x-0">
+         <!-- Header -->
+         <div class="h-16 px-6 border-b border-white/5 flex items-center justify-between shrink-0">
+             <span class="font-bold text-slate-100 tracking-wider flex items-center gap-2">
+                 <i data-lucide="menu" class="w-5 h-5 text-indigo-500"></i>
+                 <span>MENU</span>
+             </span>
+             <!-- Close Button (Mobile Only) -->
+             <button id="close-left-sidebar" class="md:hidden text-slate-400 hover:text-white">
+                 <i data-lucide="x" class="w-5 h-5"></i>
+             </button>
+         </div>
+         
+         <!-- Nav Items -->
+         <div class="flex-1 overflow-y-auto p-4 space-y-2">
+             <button class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group">
+                 <div class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                     <i data-lucide="newspaper" class="w-4 h-4 text-orange-400"></i>
+                 </div>
+                 <span class="font-medium">News</span>
+             </button>
+
+             <button class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group">
+                 <div class="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center group-hover:bg-yellow-500/20 transition-colors">
+                     <i data-lucide="trophy" class="w-4 h-4 text-yellow-400"></i>
+                 </div>
+                 <span class="font-medium">Leaderboards</span>
+             </button>
+
+             <button class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group">
+                 <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                     <i data-lucide="shield-alert" class="w-4 h-4 text-red-400"></i>
+                 </div>
+                 <span class="font-medium">Staff</span>
+             </button>
+         </div>
+
+         <!-- Sidebar Footer -->
+         <div class="p-4 border-t border-white/5">
+             <div class="text-xs text-slate-600 text-center">
+                 Ghost Chat v1.0
+             </div>
+         </div>
+      </div>
+
+      <!-- Left Sidebar Overlay (Mobile) -->
+      <div id="left-sidebar-overlay" class="md:hidden sidebar-backdrop hidden"></div>
+
+      <!-- CENTER: Chat Area -->
+      <div class="flex-1 flex flex-col relative h-full min-w-0">
         <!-- Chat Header -->
         <div class="h-16 px-4 md:px-6 border-b border-white/5 bg-slate-900/50 backdrop-blur-xl flex items-center justify-between z-20 shrink-0">
+          
           <div class="flex items-center gap-3">
-             <i data-lucide="hash" class="w-6 h-6 text-slate-400"></i>
-             <h2 class="font-bold text-slate-100 text-lg tracking-tight">general-void</h2>
+             <!-- Toggle Left Sidebar Button -->
+             <button id="toggle-left-btn" class="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                 <i data-lucide="menu" class="w-6 h-6"></i>
+             </button>
+
+             <i data-lucide="hash" class="w-5 h-5 text-slate-500 hidden sm:block"></i>
+             <h2 class="font-bold text-slate-100 text-lg tracking-tight truncate">general-void</h2>
           </div>
           
-          <!-- User Profile & Dropdown -->
-          <div class="relative" id="profile-container">
-            <button id="profile-btn" class="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-200 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 overflow-hidden">
-               <img id="header-avatar-img" src="" alt="Avatar" class="w-full h-full object-cover hidden">
-               <span id="profile-initial" class="font-bold text-sm">G</span>
-            </button>
-            
-            <!-- Dropdown Menu -->
-            <div id="profile-dropdown" class="hidden absolute right-0 mt-3 w-48 rounded-xl glass-panel shadow-2xl border border-white/10 overflow-hidden transform origin-top-right transition-all duration-200 z-50">
-               <div class="p-2 space-y-1">
-                 <button id="wallet-btn" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-left">
-                   <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
-                   Wallet
-                 </button>
-                 <button id="my-profile-btn" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-left">
-                   <i data-lucide="user" class="w-4 h-4 text-indigo-400"></i>
-                   My Profile
-                 </button>
-                 <div class="h-px bg-white/10 my-1 mx-2"></div>
-                 <button id="logout-btn" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors text-left">
-                   <i data-lucide="log-out" class="w-4 h-4"></i>
-                   Logout
-                 </button>
-               </div>
-            </div>
-          </div>
+          <div class="flex items-center gap-3">
+              <!-- User Profile & Dropdown -->
+              <div class="relative" id="profile-container">
+                <button id="profile-btn" class="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-200 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 overflow-hidden">
+                   <img id="header-avatar-img" src="" alt="Avatar" class="w-full h-full object-cover hidden">
+                   <span id="profile-initial" class="font-bold text-sm">G</span>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div id="profile-dropdown" class="hidden absolute right-0 mt-3 w-48 rounded-xl glass-panel shadow-2xl border border-white/10 overflow-hidden transform origin-top-right transition-all duration-200 z-50">
+                   <div class="p-2 space-y-1">
+                     <button id="wallet-btn" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-left">
+                       <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
+                       Wallet
+                     </button>
+                     <button id="my-profile-btn" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-left">
+                       <i data-lucide="user" class="w-4 h-4 text-indigo-400"></i>
+                       My Profile
+                     </button>
+                     <div class="h-px bg-white/10 my-1 mx-2"></div>
+                     <button id="logout-btn" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors text-left">
+                       <i data-lucide="log-out" class="w-4 h-4"></i>
+                       Logout
+                     </button>
+                   </div>
+                </div>
+              </div>
 
+              <!-- Toggle Right Sidebar Button -->
+              <button id="toggle-right-btn" class="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors border border-white/5 md:border-transparent bg-slate-800 md:bg-transparent">
+                  <i data-lucide="users" class="w-5 h-5"></i>
+              </button>
+          </div>
         </div>
 
         <!-- Messages Area -->
@@ -445,16 +515,25 @@
         </div>
       </div>
 
-      <!-- Right Column: Online Players (Hidden on Mobile) -->
-      <div class="w-72 bg-slate-900/80 border-l border-white/5 hidden md:flex flex-col backdrop-blur-xl shrink-0">
-        <div class="h-16 px-4 border-b border-white/5 flex items-center gap-2 text-slate-400 font-semibold uppercase text-xs tracking-wider shrink-0">
-          <i data-lucide="users" class="w-4 h-4"></i>
-          <span>Online Spirits</span>
+      <!-- RIGHT SIDEBAR: Online Players -->
+      <div id="right-sidebar" class="bg-slate-900/80 border-l border-white/5 flex flex-col w-72 transition-all duration-300 fixed md:relative h-full z-40 right-0 translate-x-full md:translate-x-0 backdrop-blur-xl shrink-0">
+        <div class="h-16 px-4 border-b border-white/5 flex items-center justify-between shrink-0">
+           <div class="flex items-center gap-2 text-slate-400 font-semibold uppercase text-xs tracking-wider">
+             <i data-lucide="users" class="w-4 h-4"></i>
+             <span>Online Spirits</span>
+           </div>
+           <!-- Close Button (Mobile Only) -->
+           <button id="close-right-sidebar" class="md:hidden text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+           </button>
         </div>
         <div id="users-list" class="flex-1 overflow-y-auto p-3 space-y-1">
           <!-- User Item Template (Dynamic) -->
         </div>
       </div>
+      
+      <!-- Right Sidebar Overlay (Mobile) -->
+      <div id="right-sidebar-overlay" class="md:hidden sidebar-backdrop hidden"></div>
 
     </div>
 
@@ -838,6 +917,16 @@
       const plusMenu = document.getElementById('plus-menu');
       const chatUploadBtn = document.getElementById('chat-upload-btn');
       
+      // Sidebar Elements
+      const leftSidebar = document.getElementById('left-sidebar');
+      const rightSidebar = document.getElementById('right-sidebar');
+      const toggleLeftBtn = document.getElementById('toggle-left-btn');
+      const toggleRightBtn = document.getElementById('toggle-right-btn');
+      const closeLeftSidebarBtn = document.getElementById('close-left-sidebar');
+      const closeRightSidebarBtn = document.getElementById('close-right-sidebar');
+      const leftSidebarOverlay = document.getElementById('left-sidebar-overlay');
+      const rightSidebarOverlay = document.getElementById('right-sidebar-overlay');
+      
       // Lightbox Elements
       const lightbox = document.getElementById('lightbox');
       const lightboxImg = document.getElementById('lightbox-img');
@@ -1040,6 +1129,81 @@
               reader.onerror = (err) => reject(err);
           });
       };
+
+      // --- SIDEBAR TOGGLE LOGIC ---
+      function toggleLeftSidebar() {
+          const isMobile = window.innerWidth < 768;
+          if (isMobile) {
+              // Mobile: Slide logic
+              leftSidebar.classList.toggle('-translate-x-full');
+              if (!leftSidebar.classList.contains('-translate-x-full')) {
+                  leftSidebarOverlay.classList.remove('hidden');
+                  // Close right if open
+                  rightSidebar.classList.add('translate-x-full');
+                  rightSidebarOverlay.classList.add('hidden');
+              } else {
+                  leftSidebarOverlay.classList.add('hidden');
+              }
+          } else {
+              // Desktop: Collapse width
+              if (leftSidebar.classList.contains('w-64')) {
+                  leftSidebar.classList.remove('w-64');
+                  leftSidebar.classList.add('w-0', 'overflow-hidden');
+              } else {
+                  leftSidebar.classList.add('w-64');
+                  leftSidebar.classList.remove('w-0', 'overflow-hidden');
+              }
+          }
+      }
+
+      function toggleRightSidebar() {
+          const isMobile = window.innerWidth < 768;
+          if (isMobile) {
+              // Mobile: Slide logic
+              rightSidebar.classList.toggle('translate-x-full');
+              if (!rightSidebar.classList.contains('translate-x-full')) {
+                  rightSidebarOverlay.classList.remove('hidden');
+                  // Close left if open
+                  leftSidebar.classList.add('-translate-x-full');
+                  leftSidebarOverlay.classList.add('hidden');
+              } else {
+                  rightSidebarOverlay.classList.add('hidden');
+              }
+          } else {
+              // Desktop: Collapse width
+              if (rightSidebar.classList.contains('w-72')) {
+                  rightSidebar.classList.remove('w-72');
+                  rightSidebar.classList.add('w-0', 'overflow-hidden');
+              } else {
+                  rightSidebar.classList.add('w-72');
+                  rightSidebar.classList.remove('w-0', 'overflow-hidden');
+              }
+          }
+      }
+
+      toggleLeftBtn.addEventListener('click', toggleLeftSidebar);
+      toggleRightBtn.addEventListener('click', toggleRightSidebar);
+      
+      closeLeftSidebarBtn.addEventListener('click', () => {
+          leftSidebar.classList.add('-translate-x-full');
+          leftSidebarOverlay.classList.add('hidden');
+      });
+      
+      closeRightSidebarBtn.addEventListener('click', () => {
+          rightSidebar.classList.add('translate-x-full');
+          rightSidebarOverlay.classList.add('hidden');
+      });
+
+      // Overlay Clicks
+      leftSidebarOverlay.addEventListener('click', () => {
+          leftSidebar.classList.add('-translate-x-full');
+          leftSidebarOverlay.classList.add('hidden');
+      });
+      
+      rightSidebarOverlay.addEventListener('click', () => {
+          rightSidebar.classList.add('translate-x-full');
+          rightSidebarOverlay.classList.add('hidden');
+      });
 
       // --- FX STUDIO LOGIC ---
       fxStudioBtn.addEventListener('click', () => {
