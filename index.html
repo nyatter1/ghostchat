@@ -137,18 +137,33 @@
       .file-input-hidden {
         display: none;
       }
+
+      /* Lightbox */
+      .lightbox-open #lightbox-img {
+        transform: scale(1);
+      }
     </style>
   </head>
   <body>
-    <!-- Hidden File Inputs for Profile Editing -->
+    <!-- Hidden File Inputs -->
     <input type="file" id="file-input-avatar" accept="image/*" class="file-input-hidden">
     <input type="file" id="file-input-banner" accept="image/*" class="file-input-hidden">
+    <!-- New Chat Image Input -->
+    <input type="file" id="file-input-chat" accept="image/*" class="file-input-hidden">
 
     <!-- Dynamic Background Elements (Visible on Login) -->
     <div id="bg-elements" class="fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000">
       <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-900/30 rounded-full blur-[120px] animate-pulse-slow"></div>
       <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-900/20 rounded-full blur-[120px] animate-pulse-slow" style="animation-delay: 2s"></div>
       <div class="absolute top-[20%] right-[20%] w-[300px] h-[300px] bg-cyan-900/20 rounded-full blur-[100px] animate-float"></div>
+    </div>
+
+    <!-- LIGHTBOX (Full Screen Image Viewer) -->
+    <div id="lightbox" class="fixed inset-0 z-[100] bg-black/95 hidden flex items-center justify-center cursor-pointer opacity-0 transition-opacity duration-300">
+       <div class="absolute top-4 right-4 text-white/50 hover:text-white">
+         <i data-lucide="x" class="w-8 h-8"></i>
+       </div>
+       <img id="lightbox-img" src="" class="max-w-full max-h-full object-contain p-4 transition-transform duration-300 scale-90">
     </div>
 
     <div class="relative min-h-screen w-full flex items-center justify-center">
@@ -314,11 +329,36 @@
         </div>
 
         <!-- Input Area -->
-        <div class="p-6 bg-slate-900/50 shrink-0">
+        <div class="p-6 bg-slate-900/50 shrink-0 relative">
+          
           <form id="message-form" class="relative">
-            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <i data-lucide="plus-circle" class="w-5 h-5 text-slate-500"></i>
+            
+            <!-- Plus Menu Popup -->
+            <div id="plus-menu" class="absolute bottom-full left-4 mb-3 flex flex-col gap-3 transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-none z-10">
+               <!-- Paint -->
+               <button type="button" class="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 transition-all hover:scale-110 active:scale-95 group">
+                 <i data-lucide="palette" class="w-5 h-5"></i>
+                 <span class="absolute left-12 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Paint</span>
+               </button>
+               <!-- ABC -->
+               <button type="button" class="w-10 h-10 rounded-full bg-pink-600 hover:bg-pink-500 text-white flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all hover:scale-110 active:scale-95 group">
+                 <i data-lucide="type" class="w-5 h-5"></i>
+                 <span class="absolute left-12 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Text</span>
+               </button>
+               <!-- Upload -->
+               <button type="button" id="chat-upload-btn" class="w-10 h-10 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all hover:scale-110 active:scale-95 group">
+                 <i data-lucide="image" class="w-5 h-5"></i>
+                 <span class="absolute left-12 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Upload</span>
+               </button>
             </div>
+
+            <!-- Plus Button Trigger -->
+            <div class="absolute inset-y-0 left-0 pl-2 flex items-center">
+               <button type="button" id="plus-btn" class="p-2 text-slate-500 hover:text-white transition-colors hover:rotate-90 duration-300 focus:outline-none">
+                 <i data-lucide="plus-circle" class="w-6 h-6"></i>
+               </button>
+            </div>
+            
             <input 
               type="text" 
               id="message-input" 
@@ -537,12 +577,22 @@
       // Hidden inputs
       const fileInputAvatar = document.getElementById('file-input-avatar');
       const fileInputBanner = document.getElementById('file-input-banner');
+      const fileInputChat = document.getElementById('file-input-chat');
 
+      // Chat & Input Elements
       const messageForm = document.getElementById('message-form');
       const messageInput = document.getElementById('message-input');
       const messagesList = document.getElementById('messages-list');
       const emptyState = document.getElementById('empty-state');
       const usersList = document.getElementById('users-list');
+      const plusBtn = document.getElementById('plus-btn');
+      const plusMenu = document.getElementById('plus-menu');
+      const chatUploadBtn = document.getElementById('chat-upload-btn');
+      
+      // Lightbox Elements
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightbox-img');
+
       const authError = document.getElementById('auth-error');
       const bgElements = document.getElementById('bg-elements');
       
@@ -624,6 +674,88 @@
               reader.onerror = (err) => reject(err);
           });
       };
+
+      // --- PLUS MENU LOGIC ---
+      plusBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // prevent document click handling immediate closing
+        plusMenu.classList.toggle('opacity-0');
+        plusMenu.classList.toggle('translate-y-4');
+        plusMenu.classList.toggle('pointer-events-none');
+        plusBtn.querySelector('i').classList.toggle('rotate-45'); // Rotate icon to 'x' position
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!plusMenu.contains(e.target) && !plusBtn.contains(e.target)) {
+          if (!plusMenu.classList.contains('opacity-0')) {
+             plusMenu.classList.add('opacity-0');
+             plusMenu.classList.add('translate-y-4');
+             plusMenu.classList.add('pointer-events-none');
+             plusBtn.querySelector('i').classList.remove('rotate-45');
+          }
+        }
+      });
+
+      // --- CHAT IMAGE UPLOAD ---
+      chatUploadBtn.addEventListener('click', () => {
+          fileInputChat.click();
+          // Close menu after click
+          plusMenu.classList.add('opacity-0');
+          plusMenu.classList.add('translate-y-4');
+          plusMenu.classList.add('pointer-events-none');
+          plusBtn.querySelector('i').classList.remove('rotate-45');
+      });
+
+      fileInputChat.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if(!file) return;
+          const user = auth.currentUser;
+          if(!user) return;
+
+          try {
+             // Compress heavily for chat to save bandwidth/storage doc size
+             // Use 600px width max
+             const base64 = await compressImage(file, { maxWidth: 600, quality: 0.7 });
+             
+             await addDoc(collection(db, "messages"), {
+                text: "", // Empty text for image message
+                imageURL: base64,
+                type: "image",
+                uid: user.uid,
+                displayName: user.displayName || user.email.split('@')[0],
+                photoURL: currentUserPfp || null,
+                createdAt: serverTimestamp()
+             });
+
+             fileInputChat.value = ''; // Reset input
+          } catch(e) {
+             console.error(e);
+             if(e.message === "File too large") {
+                 alert("Image too large (max 1MB).");
+             } else {
+                 alert("Failed to upload image.");
+             }
+          }
+      });
+
+      // --- LIGHTBOX LOGIC ---
+      window.openLightbox = (url) => {
+          lightboxImg.src = url;
+          lightbox.classList.remove('hidden');
+          // Trigger reflow for transition
+          void lightbox.offsetWidth;
+          lightbox.classList.remove('opacity-0');
+          lightbox.classList.add('lightbox-open');
+      };
+
+      lightbox.addEventListener('click', () => {
+          lightbox.classList.remove('lightbox-open');
+          lightbox.classList.add('opacity-0');
+          setTimeout(() => {
+              lightbox.classList.add('hidden');
+              lightboxImg.src = '';
+          }, 300);
+      });
 
       // --- GLOBAL OPEN PROFILE ---
       window.openProfile = async (uid) => {
@@ -1110,6 +1242,17 @@
             </div>`;
         }
 
+        let contentHTML = '';
+        if (data.imageURL) {
+           contentHTML = `
+             <div class="mt-1">
+               <img src="${data.imageURL}" class="max-w-[250px] md:max-w-sm rounded-xl cursor-zoom-in hover:opacity-90 transition-opacity border border-white/10 shadow-lg" onclick="openLightbox('${data.imageURL}')">
+             </div>
+           `;
+        } else {
+           contentHTML = `<p class="text-slate-300 text-[15px] leading-normal break-words whitespace-pre-wrap">${data.text}</p>`;
+        }
+
         div.innerHTML = `
           ${avatarHTML}
           <div class="flex flex-col min-w-0 flex-1">
@@ -1117,7 +1260,7 @@
                <span class="font-bold text-slate-200 hover:underline cursor-pointer" onclick="openProfile('${data.uid}')">${data.displayName}</span>
                <span class="text-[10px] text-slate-600 group-hover:text-slate-500 transition-colors">${timeString}</span>
             </div>
-            <p class="text-slate-300 text-[15px] leading-normal break-words whitespace-pre-wrap">${data.text}</p>
+            ${contentHTML}
           </div>
         `;
         messagesList.appendChild(div);
