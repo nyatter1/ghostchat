@@ -1,1 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ghost Chat</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            animation: {
+              'float': 'float 6s ease-in-out infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'glow': 'glow 2s ease-in-out infinite alternate',
+              'spin-fast': 'spin 0.7s linear infinite',
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'jump-in': 'jumpIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+              'pop': 'pop 0.3s ease-out forwards',
+              'heart-beat': 'heartBeat 0.3s ease-in-out',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              },
+              glow: {
+                'from': { boxShadow: '0 0 10px #a855f7, 0 0 20px #a855f7' },
+                'to': { boxShadow: '0 0 20px #ec4899, 0 0 30px #ec4899' },
+              },
+              fadeIn: {
+                'from': { opacity: '0', transform: 'translateY(10px)' },
+                'to': { opacity: '1', transform: 'translateY(0)' },
+              },
+              jumpIn: {
+                '0%': { opacity: '0', transform: 'scale(0.3) translateY(100px)' },
+                '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+              },
+              pop: {
+                '0%': { transform: 'scale(0.95)' },
+                '50%': { transform: 'scale(1.05)' },
+                '100%': { transform: 'scale(1)' },
+              },
+              heartBeat: {
+                '0%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.3)' },
+                '100%': { transform: 'scale(1)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #020617; /* slate-950 */
+        color: #f8fafc; /* slate-50 */
+        overflow-x: hidden;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      /* Transitions for height/opacity */
+      .form-group {
+        transition: all 0.3s ease-in-out;
+        overflow: hidden;
+      }
+      .hidden-group {
+        max-height: 0;
+        opacity: 0;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+      }
+      .visible-group {
+        max-height: 100px; /* Arbitrary max-height for transition */
+        opacity: 1;
+      }
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(100, 116, 139, 0.5);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.8);
+      }
+      
+      /* Dropdown Animation */
+      .dropdown-enter {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+      .dropdown-enter-active {
+        transform: scale(1);
+        opacity: 1;
+        transition: all 0.1s ease-out;
+      }
+      .dropdown-exit {
+        transform: scale(1);
+        opacity: 1;
+      }
+      .dropdown-exit-active {
+        transform: scale(0.95);
+        opacity: 0;
+        transition: all 0.1s ease-in;
+      }
 
+      /* Modal Blur */
+      .modal-overlay {
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        background: rgba(2, 6, 23, 0.6);
+      }
+      
+      /* File Input Hidden */
+      .file-input-hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Hidden File Inputs for Profile Editing -->
+    <input type="file" id="file-input-avatar" accept="image/*" class="file-input-hidden">
+    <input type="file" id="file-input-banner" accept="image/*" class="file-input-hidden">
+
+    <!-- Dynamic Background Elements (Visible on Login) -->
+    <div id="bg-elements" class="fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000">
+      <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-900/30 rounded-full blur-[120px] animate-pulse-slow"></div>
+      <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-900/20 rounded-full blur-[120px] animate-pulse-slow" style="animation-delay: 2s"></div>
+      <div class="absolute top-[20%] right-[20%] w-[300px] h-[300px] bg-cyan-900/20 rounded-full blur-[100px] animate-float"></div>
+    </div>
+
+    <div class="relative min-h-screen w-full flex items-center justify-center">
+      
+      <!-- AUTH CONTAINER -->
+      <div id="auth-container" class="relative z-10 w-full max-w-md p-6">
+        <div class="glass-panel rounded-2xl shadow-2xl p-8 transform transition-all duration-500 hover:shadow-purple-500/10 hover:border-white/20">
+          
+          <!-- Header -->
+          <div class="flex flex-col items-center mb-10">
+            <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-4 rounded-full mb-4 shadow-lg shadow-purple-500/30 animate-float">
+              <i data-lucide="ghost" class="w-10 h-10 text-white"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight">
+              Ghost Chat
+            </h1>
+            <p id="header-subtitle" class="text-slate-400 text-sm mt-2 font-light">
+              Welcome back to the void.
+            </p>
+          </div>
+
+          <!-- Error Message -->
+          <div id="auth-error" class="hidden mb-4 p-3 rounded-lg bg-red-900/40 border border-red-500/50 text-red-200 text-sm text-center">
+          </div>
+
+          <!-- Form -->
+          <form id="auth-form" class="space-y-5">
+            
+            <!-- Username Input (Hidden by default for Login) -->
+            <div id="username-container" class="form-group hidden-group">
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                  <i data-lucide="user" class="w-5 h-5"></i>
+                </div>
+                <input
+                  type="text"
+                  id="username"
+                  placeholder="Soul Name"
+                  class="block w-full pl-10 pr-3 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            <!-- Email Input -->
+            <div class="group">
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                  <i data-lucide="mail" class="w-5 h-5"></i>
+                </div>
+                <input
+                  type="email"
+                  id="email"
+                  required
+                  placeholder="Spectral Email"
+                  class="block w-full pl-10 pr-3 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="group">
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                  <i data-lucide="lock" class="w-5 h-5"></i>
+                </div>
+                <input
+                  type="password"
+                  id="password"
+                  required
+                  placeholder="Secret Glyph"
+                  class="block w-full pl-10 pr-3 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              id="submit-btn"
+              class="w-full relative overflow-hidden group bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-purple-900/20"
+            >
+              <div class="absolute inset-0 w-full h-full bg-white/20 group-hover:translate-x-full transition-transform duration-500 -skew-x-12 -translate-x-full"></div>
+              <span class="relative flex items-center justify-center gap-2">
+                <!-- Loader Icon (Hidden by default) -->
+                <i id="btn-loader" data-lucide="zap" class="w-5 h-5 animate-spin-fast hidden"></i>
+                
+                <!-- Text & Arrow -->
+                <span id="btn-text">Resurrect</span>
+                <i id="btn-icon" data-lucide="arrow-right" class="w-4 h-4"></i>
+              </span>
+            </button>
+          </form>
+
+          <!-- Footer / Toggle -->
+          <div class="mt-8 text-center">
+            <p class="text-slate-500 text-sm">
+              <span id="toggle-text-prompt">Don't have a vessel?</span>
+              <button
+                id="toggle-btn"
+                class="ml-2 text-purple-400 hover:text-purple-300 font-medium transition-colors hover:underline decoration-purple-500/30 underline-offset-4"
+              >
+                Create Account
+              </button>
+            </p>
+          </div>
+        </div>
+
+        <!-- Decorative footer text -->
+        <div class="text-center mt-6 opacity-30 text-xs text-slate-500 font-mono">
+          EST. 2024 • THE VOID
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT CONTAINER (Full Screen) -->
+    <div id="chat-container" class="hidden fixed inset-0 z-50 w-full h-full bg-slate-950 flex flex-row overflow-hidden">
+      
+      <!-- Left Column: Chat Area -->
+      <div class="flex-1 flex flex-col relative h-full">
+        <!-- Chat Header -->
+        <div class="h-16 px-6 border-b border-white/5 bg-slate-900/50 backdrop-blur-xl flex items-center justify-between z-20 shrink-0">
+          <div class="flex items-center gap-3">
+             <i data-lucide="hash" class="w-6 h-6 text-slate-400"></i>
+             <h2 class="font-bold text-slate-100 text-lg tracking-tight">general-void</h2>
+          </div>
+          
+          <!-- User Profile & Dropdown -->
+          <div class="relative" id="profile-container">
+            <button id="profile-btn" class="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-200 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 overflow-hidden">
+               <img id="header-avatar-img" src="" alt="Avatar" class="w-full h-full object-cover hidden">
+               <span id="profile-initial" class="font-bold text-sm">G</span>
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div id="profile-dropdown" class="hidden absolute right-0 mt-3 w-48 rounded-xl glass-panel shadow-2xl border border-white/10 overflow-hidden transform origin-top-right transition-all duration-200 z-50">
+               <div class="p-2 space-y-1">
+                 <button id="wallet-btn" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-left">
+                   <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
+                   Wallet
+                 </button>
+                 <button id="my-profile-btn" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-left">
+                   <i data-lucide="user" class="w-4 h-4 text-indigo-400"></i>
+                   My Profile
+                 </button>
+                 <div class="h-px bg-white/10 my-1 mx-2"></div>
+                 <button id="logout-btn" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors text-left">
+                   <i data-lucide="log-out" class="w-4 h-4"></i>
+                   Logout
+                 </button>
+               </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Messages Area -->
+        <div id="messages-list" class="flex-1 overflow-y-auto px-4 py-6 scroll-smooth space-y-2">
+           <!-- Empty State -->
+           <div id="empty-state" class="flex flex-col items-center justify-center mt-20 text-slate-600">
+               <i data-lucide="wind" class="w-12 h-12 mb-4 opacity-50"></i>
+               <p>The void is empty. Start a conversation.</p>
+           </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-6 bg-slate-900/50 shrink-0">
+          <form id="message-form" class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i data-lucide="plus-circle" class="w-5 h-5 text-slate-500"></i>
+            </div>
+            <input 
+              type="text" 
+              id="message-input" 
+              autocomplete="off"
+              placeholder="Message #general-void" 
+              class="block w-full pl-12 pr-12 py-3 bg-slate-800/50 border-none rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium"
+            >
+            <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
+              <button type="submit" class="p-2 hover:bg-white/5 rounded-md text-slate-400 hover:text-white transition-colors">
+                <i data-lucide="send" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right Column: Online Players -->
+      <div class="w-72 bg-slate-900/80 border-l border-white/5 hidden md:flex flex-col backdrop-blur-xl shrink-0">
+        <div class="h-16 px-4 border-b border-white/5 flex items-center gap-2 text-slate-400 font-semibold uppercase text-xs tracking-wider shrink-0">
+          <i data-lucide="users" class="w-4 h-4"></i>
+          <span>Online Spirits</span>
+        </div>
+        <div id="users-list" class="flex-1 overflow-y-auto p-3 space-y-1">
+          <!-- User Item Template (Dynamic) -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- WALLET MODAL -->
+    <div id="wallet-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="relative w-full max-w-lg p-6 animate-pop">
+           <div class="glass-panel rounded-3xl p-8 border-2 border-white/10 shadow-[0_0_50px_rgba(79,70,229,0.3)]">
+              <button id="close-wallet-btn" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-2">
+                 <i data-lucide="x" class="w-6 h-6"></i>
+              </button>
+              
+              <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300 mb-2">Spirit Wallet</h2>
+                 <p class="text-slate-400 text-sm">Your ethereal possessions</p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-6">
+                 <!-- Coins Card -->
+                 <div class="bg-slate-900/50 rounded-2xl p-6 flex flex-col items-center border border-yellow-500/20 shadow-lg shadow-yellow-500/10 animate-jump-in" style="animation-delay: 0.1s;">
+                    <div class="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mb-4 border border-yellow-500/50 animate-bounce">
+                       <i data-lucide="coins" class="w-8 h-8 text-yellow-400"></i>
+                    </div>
+                    <span class="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-1">Soul Coins</span>
+                    <span id="wallet-coins" class="text-2xl font-bold text-yellow-100">0</span>
+                 </div>
+
+                 <!-- Gems Card -->
+                 <div class="bg-slate-900/50 rounded-2xl p-6 flex flex-col items-center border border-pink-500/20 shadow-lg shadow-pink-500/10 animate-jump-in" style="animation-delay: 0.3s;">
+                    <div class="w-16 h-16 rounded-full bg-pink-500/20 flex items-center justify-center mb-4 border border-pink-500/50 animate-bounce" style="animation-delay: 0.2s;">
+                       <i data-lucide="gem" class="w-8 h-8 text-pink-400"></i>
+                    </div>
+                    <span class="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-1">Void Gems</span>
+                    <span id="wallet-gems" class="text-2xl font-bold text-pink-100">0</span>
+                 </div>
+              </div>
+           </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL (Used for both Edit and View) -->
+    <div id="profile-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="relative w-full max-w-md animate-pop">
+           <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-[#0f172a]">
+              
+              <!-- Banner Section -->
+              <div class="relative h-40 bg-slate-800 group">
+                 <img id="profile-banner-img" src="" class="w-full h-full object-cover hidden">
+                 <div id="profile-banner-placeholder" class="w-full h-full bg-gradient-to-r from-indigo-900 to-purple-900 flex items-center justify-center">
+                    <i data-lucide="image" class="w-8 h-8 text-white/20"></i>
+                 </div>
+                 
+                 <!-- Edit Overlay (Only if editable and NOT in preview mode) -->
+                 <div id="banner-edit-overlay" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hidden">
+                    <span class="text-white text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                       <i data-lucide="upload" class="w-4 h-4"></i> Change Banner
+                    </span>
+                 </div>
+                 
+                 <!-- Toggle Preview Button (Only visible if it is your profile) -->
+                 <button id="toggle-view-btn" class="absolute top-4 left-4 bg-black/30 hover:bg-black/50 text-white rounded-full p-2 transition-colors z-20 hidden" title="Toggle Preview">
+                     <i id="toggle-view-icon" data-lucide="eye" class="w-5 h-5"></i>
+                 </button>
+
+                 <button id="close-profile-btn" class="absolute top-4 right-4 bg-black/30 hover:bg-black/50 text-white rounded-full p-2 transition-colors z-20">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                 </button>
+              </div>
+
+              <!-- Profile Content -->
+              <div class="px-8 pb-8">
+                 <div class="flex justify-between items-end -mt-12 mb-6">
+                    <!-- Avatar -->
+                    <div class="relative w-24 h-24 rounded-full border-4 border-[#0f172a] bg-slate-800 overflow-hidden group shadow-lg">
+                       <img id="profile-pfp-img" src="" class="w-full h-full object-cover hidden">
+                       <div id="profile-pfp-placeholder" class="w-full h-full flex items-center justify-center bg-slate-700 text-indigo-400">
+                          <i data-lucide="ghost" class="w-10 h-10"></i>
+                       </div>
+                       <!-- Edit Overlay (Only if editable and NOT in preview mode) -->
+                       <div id="pfp-edit-overlay" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hidden">
+                           <i data-lucide="camera" class="w-6 h-6 text-white"></i>
+                       </div>
+                    </div>
+                    
+                    <!-- Like Button (View Mode) -->
+                    <button id="like-btn" class="hidden mb-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all flex items-center gap-2 group active:scale-95">
+                        <i id="like-icon" data-lucide="heart" class="w-5 h-5 text-slate-400 group-hover:text-pink-500 transition-colors"></i>
+                        <span id="like-count" class="text-slate-300 text-sm font-semibold">0</span>
+                    </button>
+                 </div>
+
+                 <form id="profile-form" class="space-y-4">
+                    <!-- Username -->
+                    <div>
+                       <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Soul Name</label>
+                       <input type="text" id="profile-username" class="w-full bg-transparent border-b border-slate-700 py-2 text-xl font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-600 disabled:border-transparent disabled:cursor-default" disabled>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                       <!-- Age -->
+                       <div>
+                          <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Eons (Age)</label>
+                          <input type="number" id="profile-age" class="w-full bg-transparent border-b border-slate-700 py-2 text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-600 disabled:border-transparent disabled:cursor-default" disabled>
+                       </div>
+                       <!-- Gender -->
+                       <div>
+                          <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Essence</label>
+                          <select id="profile-gender" class="w-full bg-transparent border-b border-slate-700 py-2 text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors disabled:border-transparent disabled:appearance-none disabled:cursor-default" disabled>
+                             <option value="Unknown">Unknown</option>
+                             <option value="Male">Male</option>
+                             <option value="Female">Female</option>
+                             <option value="Non-binary">Non-binary</option>
+                             <option value="Spirit">Spirit</option>
+                          </select>
+                       </div>
+                    </div>
+
+                    <!-- Save Button (Edit Mode) -->
+                    <button type="submit" id="profile-save-btn" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95 hidden">
+                       Save Changes
+                    </button>
+                 </form>
+              </div>
+           </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import { getFirestore, collection, addDoc, setDoc, getDoc, deleteDoc, doc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      // Firebase Config
+      const firebaseConfig = {
+        apiKey: "AIzaSyBdJsgC-Y_GUWuDzo3Z_KG_z25-oq1C8Sg",
+        authDomain: "ghostchat-31f7c.firebaseapp.com",
+        projectId: "ghostchat-31f7c",
+        storageBucket: "ghostchat-31f7c.firebasestorage.app",
+        messagingSenderId: "480466984505",
+        appId: "1:480466984505:web:f9ed7896449d40a15077e8",
+        measurementId: "G-NBQ3563H1D"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // DOM Elements
+      const authContainer = document.getElementById('auth-container');
+      const chatContainer = document.getElementById('chat-container');
+      const authForm = document.getElementById('auth-form');
+      
+      const profileBtn = document.getElementById('profile-btn');
+      const profileInitial = document.getElementById('profile-initial');
+      const headerAvatarImg = document.getElementById('header-avatar-img');
+      const profileDropdown = document.getElementById('profile-dropdown');
+      const walletBtn = document.getElementById('wallet-btn');
+      const myProfileBtn = document.getElementById('my-profile-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      const walletModal = document.getElementById('wallet-modal');
+      const closeWalletBtn = document.getElementById('close-wallet-btn');
+      const walletCoins = document.getElementById('wallet-coins');
+      const walletGems = document.getElementById('wallet-gems');
+
+      // Profile Modal Elements
+      const profileModal = document.getElementById('profile-modal');
+      const closeProfileBtn = document.getElementById('close-profile-btn');
+      const profileForm = document.getElementById('profile-form');
+      const profileUsername = document.getElementById('profile-username');
+      const profileAge = document.getElementById('profile-age');
+      const profileGender = document.getElementById('profile-gender');
+      const profileSaveBtn = document.getElementById('profile-save-btn');
+      
+      const profileBannerImg = document.getElementById('profile-banner-img');
+      const profileBannerPlaceholder = document.getElementById('profile-banner-placeholder');
+      const bannerEditOverlay = document.getElementById('banner-edit-overlay');
+      const profilePfpImg = document.getElementById('profile-pfp-img');
+      const profilePfpPlaceholder = document.getElementById('profile-pfp-placeholder');
+      const pfpEditOverlay = document.getElementById('pfp-edit-overlay');
+      
+      const likeBtn = document.getElementById('like-btn');
+      const likeIcon = document.getElementById('like-icon');
+      const likeCount = document.getElementById('like-count');
+      
+      const toggleViewBtn = document.getElementById('toggle-view-btn');
+      const toggleViewIcon = document.getElementById('toggle-view-icon');
+
+      // Hidden inputs
+      const fileInputAvatar = document.getElementById('file-input-avatar');
+      const fileInputBanner = document.getElementById('file-input-banner');
+
+      const messageForm = document.getElementById('message-form');
+      const messageInput = document.getElementById('message-input');
+      const messagesList = document.getElementById('messages-list');
+      const emptyState = document.getElementById('empty-state');
+      const usersList = document.getElementById('users-list');
+      const authError = document.getElementById('auth-error');
+      const bgElements = document.getElementById('bg-elements');
+      
+      const usernameContainer = document.getElementById('username-container');
+      const usernameInput = document.getElementById('username');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      
+      const subtitle = document.getElementById('header-subtitle');
+      const submitBtn = document.getElementById('submit-btn');
+      const btnText = document.getElementById('btn-text');
+      const btnIcon = document.getElementById('btn-icon');
+      const btnLoader = document.getElementById('btn-loader');
+      const toggleBtn = document.getElementById('toggle-btn');
+      const togglePrompt = document.getElementById('toggle-text-prompt');
+
+      let isLogin = true;
+      let unsubscribeMessages = null;
+      let unsubscribeUsers = null;
+      let presenceInterval = null;
+      let currentViewedProfileUid = null;
+      let isEditingProfile = false;
+      let isPreviewMode = false;
+      let currentUserPfp = null; // Store locally to avoid re-fetching constantly
+
+      // Initialize Icons
+      lucide.createIcons();
+
+      // --- HELPERS ---
+      
+      function formatNumber(num) {
+          return new Intl.NumberFormat().format(num);
+      }
+
+      function animateValue(obj, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+          if (!startTimestamp) startTimestamp = timestamp;
+          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+          obj.innerHTML = formatNumber(Math.floor(progress * (end - start) + start));
+          if (progress < 1) {
+            window.requestAnimationFrame(step);
+          }
+        };
+        window.requestAnimationFrame(step);
+      }
+
+      // Image Compression Logic (Client Side) with 1MB Limit Check
+      const compressImage = async (file, { quality = 0.7, maxWidth = 800 }) => {
+          // Check file size (1MB = 1048576 bytes)
+          if (file.size > 1048576) {
+              throw new Error("File too large");
+          }
+
+          return new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(file);
+              reader.onload = (event) => {
+                  const img = new Image();
+                  img.src = event.target.result;
+                  img.onload = () => {
+                      const canvas = document.createElement('canvas');
+                      let width = img.width;
+                      let height = img.height;
+
+                      if (width > maxWidth) {
+                          height = Math.round((height * maxWidth) / width);
+                          width = maxWidth;
+                      }
+
+                      canvas.width = width;
+                      canvas.height = height;
+                      const ctx = canvas.getContext('2d');
+                      ctx.drawImage(img, 0, 0, width, height);
+                      resolve(canvas.toDataURL(file.type, quality));
+                  };
+                  img.onerror = (err) => reject(err);
+              };
+              reader.onerror = (err) => reject(err);
+          });
+      };
+
+      // --- GLOBAL OPEN PROFILE ---
+      window.openProfile = async (uid) => {
+          currentViewedProfileUid = uid;
+          const currentUser = auth.currentUser;
+          const isMe = currentUser && currentUser.uid === uid;
+          isEditingProfile = isMe;
+          
+          // Reset Preview State
+          isPreviewMode = false;
+          
+          // Reset UI
+          profileDropdown.classList.add('hidden');
+          profileUsername.value = "Summoning...";
+          profileAge.value = "";
+          profileGender.value = "Unknown";
+          profileBannerImg.classList.add('hidden');
+          profileBannerPlaceholder.classList.remove('hidden');
+          profilePfpImg.classList.add('hidden');
+          profilePfpPlaceholder.classList.remove('hidden');
+          likeBtn.classList.add('hidden');
+          toggleViewBtn.classList.add('hidden');
+          
+          toggleModal(profileModal, true);
+
+          try {
+              const docRef = doc(db, "users", uid);
+              const docSnap = await getDoc(docRef);
+              const data = docSnap.exists() ? docSnap.data() : {};
+              
+              // Fill Data
+              profileUsername.value = data.displayName || "Unknown Spirit";
+              profileAge.value = data.age || "";
+              profileGender.value = data.gender || "Unknown";
+              
+              // Images
+              if (data.bannerURL) {
+                  profileBannerImg.src = data.bannerURL;
+                  profileBannerImg.classList.remove('hidden');
+                  profileBannerPlaceholder.classList.add('hidden');
+              }
+              
+              // Use Firestore PFP first, falling back to local cached if me
+              const pfp = data.photoURL || (isMe ? currentUserPfp : null);
+              if (pfp) {
+                  profilePfpImg.src = pfp;
+                  profilePfpImg.classList.remove('hidden');
+                  profilePfpPlaceholder.classList.add('hidden');
+              }
+
+              // UI State: Edit vs View
+              if (isMe) {
+                  // Enable Edit Mode Features
+                  setProfileMode('edit');
+                  toggleViewBtn.classList.remove('hidden');
+                  
+                  // Add click listeners for file upload
+                  bannerEditOverlay.onclick = () => fileInputBanner.click();
+                  pfpEditOverlay.onclick = () => fileInputAvatar.click();
+                  
+              } else {
+                  // Force View Mode
+                  setProfileMode('view');
+                  toggleViewBtn.classList.add('hidden'); // Can't edit others
+                  
+                  // Like Button Logic
+                  likeBtn.classList.remove('hidden');
+                  const likes = data.likes || 0;
+                  const likedBy = data.likedBy || [];
+                  const isLiked = likedBy.includes(currentUser.uid);
+                  
+                  likeCount.textContent = formatNumber(likes);
+                  if (isLiked) {
+                      likeIcon.classList.add('fill-pink-500', 'text-pink-500');
+                      likeBtn.classList.add('border-pink-500/30', 'bg-pink-500/10');
+                  } else {
+                      likeIcon.classList.remove('fill-pink-500', 'text-pink-500');
+                      likeBtn.classList.remove('border-pink-500/30', 'bg-pink-500/10');
+                  }
+              }
+
+          } catch (e) {
+              console.error(e);
+              profileUsername.value = "Error summoning spirit";
+          }
+      };
+
+      function setProfileMode(mode) {
+          if (mode === 'edit') {
+              // Edit Mode
+              profileUsername.disabled = false;
+              profileAge.disabled = false;
+              profileGender.disabled = false;
+              profileSaveBtn.classList.remove('hidden');
+              bannerEditOverlay.classList.remove('hidden');
+              pfpEditOverlay.classList.remove('hidden');
+              
+              // Icon should show Eye (click to preview)
+              toggleViewIcon.setAttribute('data-lucide', 'eye');
+              
+          } else {
+              // View Mode (Preview or Other)
+              profileUsername.disabled = true;
+              profileAge.disabled = true;
+              profileGender.disabled = true;
+              profileSaveBtn.classList.add('hidden');
+              bannerEditOverlay.classList.add('hidden');
+              pfpEditOverlay.classList.add('hidden');
+
+              // Icon should show Pencil (click to edit)
+              toggleViewIcon.setAttribute('data-lucide', 'pencil');
+          }
+          lucide.createIcons();
+      }
+
+      // --- MODAL LOGIC ---
+
+      function toggleModal(modal, show) {
+          if (show) {
+              modal.classList.remove('hidden');
+              void modal.offsetWidth; 
+              modal.classList.remove('opacity-0');
+          } else {
+              modal.classList.add('opacity-0');
+              setTimeout(() => {
+                  modal.classList.add('hidden');
+              }, 300);
+          }
+      }
+
+      closeProfileBtn.addEventListener('click', () => toggleModal(profileModal, false));
+      closeWalletBtn.addEventListener('click', () => toggleModal(walletModal, false));
+
+      // --- TOGGLE PREVIEW ---
+      toggleViewBtn.addEventListener('click', () => {
+          if (!isEditingProfile) return;
+          isPreviewMode = !isPreviewMode;
+          setProfileMode(isPreviewMode ? 'view' : 'edit');
+      });
+
+      // --- PROFILE ACTIONS ---
+
+      // Save Profile
+      profileForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (!isEditingProfile) return;
+          
+          const user = auth.currentUser;
+          const newName = profileUsername.value;
+          const newAge = profileAge.value;
+          const newGender = profileGender.value;
+          
+          const newPfp = (!profilePfpImg.classList.contains('hidden')) ? profilePfpImg.src : null;
+          const newBanner = (!profileBannerImg.classList.contains('hidden')) ? profileBannerImg.src : null;
+
+          try {
+             profileSaveBtn.textContent = "Saving...";
+             profileSaveBtn.disabled = true;
+
+             // 1. Update Auth Display Name ONLY (No PhotoURL to avoid limit error)
+             await updateProfile(user, { displayName: newName });
+             
+             // 2. Update Firestore (Guard against undefined)
+             await setDoc(doc(db, "users", user.uid), {
+                 displayName: newName,
+                 photoURL: newPfp || null,
+                 bannerURL: newBanner || null,
+                 age: newAge,
+                 gender: newGender
+             }, { merge: true });
+
+             // 3. Update Local State & Header
+             currentUserPfp = newPfp || null;
+             updateHeaderAvatar(user.displayName, currentUserPfp);
+             
+             // 4. Update Online Status (Guard against undefined)
+             await updateDoc(doc(db, "online", user.uid), {
+                 displayName: newName,
+                 photoURL: newPfp || null
+             });
+
+             toggleModal(profileModal, false);
+
+          } catch(e) {
+              console.error(e);
+              alert("Failed to save profile. Ensure images are not too massive.");
+          } finally {
+              profileSaveBtn.textContent = "Save Changes";
+              profileSaveBtn.disabled = false;
+          }
+      });
+
+      // Like Profile
+      likeBtn.addEventListener('click', async () => {
+          if(!currentViewedProfileUid) return;
+          const user = auth.currentUser;
+          const userRef = doc(db, "users", currentViewedProfileUid);
+          
+          const icon = likeBtn.querySelector('i');
+          const isLiked = icon.classList.contains('fill-pink-500');
+          let currentCount = parseInt(likeCount.textContent.replace(/,/g, ''));
+          
+          if (isLiked) {
+             icon.classList.remove('fill-pink-500', 'text-pink-500');
+             likeBtn.classList.remove('border-pink-500/30', 'bg-pink-500/10');
+             likeCount.textContent = formatNumber(currentCount - 1);
+             
+             await updateDoc(userRef, {
+                 likes: increment(-1),
+                 likedBy: arrayRemove(user.uid)
+             });
+          } else {
+             icon.classList.add('fill-pink-500', 'text-pink-500');
+             likeBtn.classList.add('border-pink-500/30', 'bg-pink-500/10');
+             icon.style.animation = 'none';
+             void icon.offsetWidth;
+             icon.style.animation = 'heartBeat 0.3s ease-in-out';
+             likeCount.textContent = formatNumber(currentCount + 1);
+
+             await updateDoc(userRef, {
+                 likes: increment(1),
+                 likedBy: arrayUnion(user.uid)
+             });
+          }
+      });
+
+      // File Inputs Handling
+      fileInputAvatar.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if(!file) return;
+          try {
+              const base64 = await compressImage(file, { maxWidth: 200, quality: 0.8 });
+              profilePfpImg.src = base64;
+              profilePfpImg.classList.remove('hidden');
+              profilePfpPlaceholder.classList.add('hidden');
+          } catch(e) {
+              if (e.message === "File too large") {
+                  alert("Image is too large! Max 1MB allowed.");
+              } else {
+                  alert("Image processing failed.");
+              }
+          }
+      });
+
+      fileInputBanner.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if(!file) return;
+          try {
+              const base64 = await compressImage(file, { maxWidth: 600, quality: 0.7 });
+              profileBannerImg.src = base64;
+              profileBannerImg.classList.remove('hidden');
+              profileBannerPlaceholder.classList.add('hidden');
+          } catch(e) {
+              if (e.message === "File too large") {
+                  alert("Image is too large! Max 1MB allowed.");
+              } else {
+                  alert("Image processing failed.");
+              }
+          }
+      });
+
+      // --- AUTH UI LOGIC ---
+
+      toggleBtn.addEventListener('click', () => {
+        isLogin = !isLogin;
+        authError.classList.add('hidden');
+        if (isLogin) {
+          usernameContainer.classList.add('hidden-group');
+          usernameContainer.classList.remove('visible-group');
+          usernameInput.removeAttribute('required');
+          subtitle.textContent = 'Welcome back to the void.';
+          btnText.textContent = 'Resurrect';
+          togglePrompt.textContent = "Don't have a vessel?";
+          toggleBtn.textContent = 'Create Account';
+        } else {
+          usernameContainer.classList.remove('hidden-group');
+          usernameContainer.classList.add('visible-group');
+          usernameInput.setAttribute('required', 'true');
+          subtitle.textContent = 'Begin your ethereal journey.';
+          btnText.textContent = 'Materialize';
+          togglePrompt.textContent = "Already haunting us?";
+          toggleBtn.textContent = 'Login';
+        }
+      });
+
+      // --- MENU LOGIC ---
+      profileBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profileDropdown.classList.toggle('hidden');
+          if(!profileDropdown.classList.contains('hidden')) {
+              profileDropdown.classList.add('dropdown-enter-active');
+              profileDropdown.classList.remove('dropdown-exit-active');
+          }
+      });
+      document.addEventListener('click', (e) => {
+          if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+              if(!profileDropdown.classList.contains('hidden')) {
+                  profileDropdown.classList.add('hidden');
+              }
+          }
+      });
+      
+      walletBtn.addEventListener('click', async () => {
+          const user = auth.currentUser;
+          if(!user) return;
+          try {
+             const userDoc = await getDoc(doc(db, "users", user.uid));
+             const userData = userDoc.exists() ? userDoc.data() : { coins: 0, gems: 0 };
+             toggleModal(walletModal, true);
+             animateValue(walletCoins, 0, userData.coins || 0, 1500);
+             animateValue(walletGems, 0, userData.gems || 0, 1500);
+          } catch(e) { console.error(e); }
+      });
+
+      myProfileBtn.addEventListener('click', () => {
+          const user = auth.currentUser;
+          if(user) openProfile(user.uid);
+      });
+
+      // --- AUTH STATE & INIT ---
+
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          authContainer.classList.add('hidden');
+          bgElements.classList.add('opacity-0'); 
+          chatContainer.classList.remove('hidden');
+          chatContainer.classList.add('flex');
+          
+          // INIT USER DATA
+          const userRef = doc(db, "users", user.uid);
+          const userSnap = await getDoc(userRef);
+          
+          let pfp = null;
+          let name = user.displayName || user.email.split('@')[0];
+
+          if (userSnap.exists()) {
+              const data = userSnap.data();
+              pfp = data.photoURL || null; // Fix undefined
+              name = data.displayName || name;
+          } else {
+              // Create doc if missing
+              await setDoc(userRef, {
+                  coins: 10000,
+                  gems: 10000,
+                  likes: 0,
+                  likedBy: [],
+                  displayName: name,
+                  photoURL: null,
+                  createdAt: serverTimestamp()
+              }, { merge: true });
+          }
+          
+          // Set global cached PFP
+          currentUserPfp = pfp;
+          updateHeaderAvatar(name, currentUserPfp);
+
+          startChatListener();
+          setupPresence(user, name, pfp);
+        } else {
+          authContainer.classList.remove('hidden');
+          bgElements.classList.remove('opacity-0');
+          chatContainer.classList.add('hidden');
+          chatContainer.classList.remove('flex');
+          profileDropdown.classList.add('hidden');
+          
+          currentUserPfp = null;
+
+          if (unsubscribeMessages) unsubscribeMessages();
+          if (unsubscribeUsers) unsubscribeUsers();
+          if (presenceInterval) clearInterval(presenceInterval);
+          
+          messagesList.innerHTML = '';
+          messagesList.appendChild(emptyState);
+          emptyState.style.display = 'flex';
+          usersList.innerHTML = '';
+        }
+      });
+
+      function updateHeaderAvatar(name, photoUrl) {
+          if (photoUrl) {
+              headerAvatarImg.src = photoUrl;
+              headerAvatarImg.classList.remove('hidden');
+              profileInitial.classList.add('hidden');
+          } else {
+              headerAvatarImg.classList.add('hidden');
+              profileInitial.classList.remove('hidden');
+              profileInitial.textContent = name ? name.charAt(0).toUpperCase() : '?';
+          }
+      }
+
+      // --- CHAT & PRESENCE ---
+
+      async function setupPresence(user, name, photoUrl) {
+        const userRef = doc(db, "online", user.uid);
+        const updateStatus = async () => {
+            // Guard against undefined photoURL
+            await setDoc(userRef, {
+                uid: user.uid,
+                displayName: name,
+                photoURL: photoUrl || null, 
+                lastSeen: serverTimestamp()
+            }, { merge: true });
+        };
+        await updateStatus();
+        presenceInterval = setInterval(updateStatus, 60000);
+
+        const q = query(collection(db, "online"), orderBy("lastSeen", "desc"));
+        unsubscribeUsers = onSnapshot(q, (snapshot) => {
+            usersList.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const lastSeen = data.lastSeen ? data.lastSeen.toDate() : new Date();
+                const diff = (new Date() - lastSeen) / 1000 / 60; // mins
+                if (diff < 5) renderUser(data);
+            });
+        });
+
+        window.addEventListener("beforeunload", () => { deleteDoc(userRef); });
+      }
+
+      function renderUser(data) {
+        const div = document.createElement('div');
+        div.className = "flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group opacity-0 animate-fade-in";
+        div.onclick = () => openProfile(data.uid); 
+        
+        let avatarHTML = '';
+        if (data.photoURL) {
+            avatarHTML = `<img src="${data.photoURL}" class="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-indigo-500/50">`;
+        } else {
+            avatarHTML = `
+             <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border border-white/10 group-hover:border-indigo-500/50 transition-colors">
+               <i data-lucide="ghost" class="w-4 h-4 text-slate-400 group-hover:text-indigo-400"></i>
+             </div>`;
+        }
+
+        div.innerHTML = `
+           <div class="relative">
+             ${avatarHTML}
+             <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-slate-900 rounded-full"></div>
+           </div>
+           <span class="text-sm font-medium text-slate-400 group-hover:text-slate-200 transition-colors truncate">${data.displayName}</span>
+        `;
+        usersList.appendChild(div);
+        lucide.createIcons();
+      }
+
+      function startChatListener() {
+        const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+        unsubscribeMessages = onSnapshot(q, (snapshot) => {
+          if (snapshot.empty) {
+             emptyState.style.display = 'flex';
+             return;
+          }
+          emptyState.style.display = 'none';
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") renderMessage(change.doc.data());
+          });
+          messagesList.scrollTop = messagesList.scrollHeight;
+        });
+      }
+
+      function renderMessage(data) {
+        const div = document.createElement('div');
+        div.className = "flex items-start gap-4 px-2 py-1 hover:bg-white/[0.02] transition-colors group animate-fade-in";
+        
+        let timeString = "";
+        if (data.createdAt) {
+            const date = data.createdAt.toDate();
+            timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else {
+            timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        let avatarHTML = '';
+        if (data.photoURL) {
+            avatarHTML = `<img src="${data.photoURL}" class="w-10 h-10 mt-1 rounded-full object-cover shrink-0 border border-transparent group-hover:border-indigo-500/20 cursor-pointer" onclick="openProfile('${data.uid}')">`;
+        } else {
+            avatarHTML = `
+            <div class="w-10 h-10 mt-1 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0 border border-transparent group-hover:border-indigo-500/20 transition-colors cursor-pointer" onclick="openProfile('${data.uid}')">
+                <i data-lucide="ghost" class="w-5 h-5 text-indigo-400"></i>
+            </div>`;
+        }
+
+        div.innerHTML = `
+          ${avatarHTML}
+          <div class="flex flex-col min-w-0 flex-1">
+            <div class="flex items-baseline gap-2">
+               <span class="font-bold text-slate-200 hover:underline cursor-pointer" onclick="openProfile('${data.uid}')">${data.displayName}</span>
+               <span class="text-[10px] text-slate-600 group-hover:text-slate-500 transition-colors">${timeString}</span>
+            </div>
+            <p class="text-slate-300 text-[15px] leading-normal break-words whitespace-pre-wrap">${data.text}</p>
+          </div>
+        `;
+        messagesList.appendChild(div);
+        lucide.createIcons();
+      }
+
+      // --- FORMS ---
+
+      authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        const username = usernameInput.value;
+        
+        submitBtn.disabled = true;
+        btnText.classList.add('hidden');
+        btnIcon.classList.add('hidden');
+        btnLoader.classList.remove('hidden');
+        authError.classList.add('hidden');
+
+        try {
+          if (isLogin) {
+            await signInWithEmailAndPassword(auth, email, password);
+          } else {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            if (username) {
+               await updateProfile(userCredential.user, { displayName: username });
+            }
+            await setDoc(doc(db, "users", userCredential.user.uid), {
+                coins: 10000,
+                gems: 10000,
+                likes: 0,
+                likedBy: [],
+                displayName: username || email.split('@')[0],
+                photoURL: null,
+                createdAt: serverTimestamp()
+            });
+          }
+        } catch (error) {
+          console.error(error);
+          let errorMsg = "The spirits rejected your request.";
+          if (error.code === 'auth/invalid-email') errorMsg = "That spectral email is invalid.";
+          if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') errorMsg = "Unknown soul or wrong glyph.";
+          if (error.code === 'auth/email-already-in-use') errorMsg = "That vessel is already occupied.";
+          if (error.code === 'auth/weak-password') errorMsg = "Your glyph is too weak.";
+          authError.textContent = errorMsg;
+          authError.classList.remove('hidden');
+        } finally {
+          submitBtn.disabled = false;
+          btnText.classList.remove('hidden');
+          btnIcon.classList.remove('hidden');
+          btnLoader.classList.add('hidden');
+        }
+      });
+
+      messageForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = messageInput.value.trim();
+        const user = auth.currentUser;
+        if (!text || !user) return;
+        try {
+          messageInput.value = ''; 
+          // Use cached Firestore PFP if available
+          await addDoc(collection(db, "messages"), {
+            text: text,
+            uid: user.uid,
+            displayName: user.displayName || user.email.split('@')[0],
+            photoURL: currentUserPfp || null, // Guard undefined
+            createdAt: serverTimestamp()
+          });
+        } catch (error) {
+          console.error("Error sending message:", error);
+          alert("Failed to send message into the void.");
+        }
+      });
+
+      logoutBtn.addEventListener('click', async () => {
+        const user = auth.currentUser;
+        if(user) {
+            try { await deleteDoc(doc(db, "online", user.uid)); } catch(e) {}
+        }
+        signOut(auth);
+      });
+
+    </script>
+  </body>
+</html>
