@@ -454,7 +454,7 @@
                <div class="flex-1 flex flex-col min-h-0">
                    <div class="flex p-1 bg-slate-800/80 rounded-xl mb-4 shrink-0"><button class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white shadow-lg" id="ts-tab-username">Username</button><button class="flex-1 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition-all" id="ts-tab-text">Text Message</button></div>
                    <div class="flex gap-2 mb-4 shrink-0 overflow-x-auto pb-2"><button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-all ts-type-btn active" data-type="solid">Colours</button><button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all ts-type-btn" data-type="gradient">Gradients</button><button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all ts-type-btn" data-type="neon">Neon</button></div>
-                   <div class="flex-1 overflow-y-auto pr-2 space-y-6"><div><div class="flex items-center justify-between mb-2"><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Font (50+)</label><span id="ts-current-font" class="text-xs text-indigo-400">Default</span></div><div class="grid grid-cols-2 md:grid-cols-3 gap-2" id="ts-font-grid"></div></div><div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block" id="ts-color-label">Palette (50)</label><div class="grid grid-cols-5 md:grid-cols-8 gap-3" id="ts-color-grid"></div></div></div>
+                   <div class="flex-1 overflow-y-auto pr-2 space-y-6"><div><div class="flex items-center justify-between mb-2"><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Font (50+)</label><span id="ts-current-font" class="text-xs text-indigo-400">Default</span></div><div class="grid grid-cols-2 md:grid-cols-3 gap-2" id="ts-font-grid"></div></div><div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block" id="ts-color-label">Palette (100+)</label><div class="grid grid-cols-5 md:grid-cols-8 gap-3" id="ts-color-grid"></div></div></div>
                </div>
            </div>
         </div>
@@ -875,27 +875,23 @@
           "Kalam", "Permanent Marker", "Orbitron", "Press Start 2P", "Monoton", "Creepster", "Nosifer", "Butcherman", "Eater", "Frijole"
       ];
 
+      // Expanded to 100+ items each using programmatic generation
       const SOLID_COLORS = [
          "#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#475569", "#334155", "#1e293b", "#0f172a",
          "#ef4444", "#dc2626", "#b91c1c", "#991b1b", "#7f1d1d", "#f97316", "#ea580c", "#c2410c", "#9a3412", "#7c2d12",
          "#f59e0b", "#d97706", "#b45309", "#92400e", "#78350f", "#eab308", "#ca8a04", "#a16207", "#854d0e", "#713f12",
          "#84cc16", "#65a30d", "#4d7c0f", "#3f6212", "#365314", "#22c55e", "#16a34a", "#15803d", "#166534", "#14532d",
-         "#10b981", "#059669", "#047857", "#065f46", "#064e3b", "#14b8a6", "#0d9488", "#0f766e", "#115e59", "#134e4a"
+         "#10b981", "#059669", "#047857", "#065f46", "#064e3b", "#14b8a6", "#0d9488", "#0f766e", "#115e59", "#134e4a",
+         ...Array.from({length: 50}, (_, i) => `hsl(${Math.floor(i * 7.2)}, 70%, 60%)`)
       ];
 
-      const GRADIENTS = Array.from({length: 50}, (_, i) => {
-          const h1 = Math.floor(i * (360/50));
+      const GRADIENTS = Array.from({length: 100}, (_, i) => {
+          const h1 = Math.floor(i * 3.6);
           const h2 = (h1 + 60) % 360;
           return `linear-gradient(135deg, hsl(${h1}, 80%, 60%), hsl(${h2}, 80%, 60%))`;
       });
 
-      const NEON_COLORS = [
-          "#ff00ff", "#00ffff", "#00ff00", "#ffff00", "#ff0000", "#0000ff", "#ff7f00", "#7f00ff", "#ff007f", "#00ff7f",
-          "#ff1493", "#00bfff", "#32cd32", "#ffd700", "#ff4500", "#1e90ff", "#ff69b4", "#8a2be2", "#dc143c", "#00fa9a",
-          "#f08080", "#20b2aa", "#98fb98", "#eee8aa", "#ff6347", "#4682b4", "#da70d6", "#9370db", "#cd5c5c", "#66cdaa",
-          "#fa8072", "#5f9ea0", "#9acd32", "#bdb76b", "#e9967a", "#b0c4de", "#dda0dd", "#7b68ee", "#f0e68c", "#8fbc8f",
-          "#ffb6c1", "#afeeee", "#90ee90", "#fffacd", "#ffa07a", "#87cefa", "#d8bfd8", "#6a5acd", "#ffe4b5", "#3cb371"
-      ];
+      const NEON_COLORS = Array.from({length: 100}, (_, i) => `hsl(${Math.floor(i * 3.6)}, 100%, 50%)`);
 
       // --- TEXTURE GENERATOR FOR FX STUDIO ---
       const generateTextures = () => {
@@ -903,51 +899,59 @@
           textures.push('none'); // 1. None
 
           // 2. Blueprint Variations (10)
-          ['#269', '#1a365d', '#1e1b4b', '#312e81', '#4338ca', '#374151', '#1f2937', '#111827', '#000000', '#4c1d95'].forEach(col => {
-              textures.push(`background-color:${col}; background-image: linear-gradient(rgba(255,255,255,0.2) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,0.2) 2px, transparent 2px), linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size:100px 100px, 100px 100px, 20px 20px, 20px 20px; background-position:-2px -2px, -2px -2px, -1px -1px, -1px -1px`);
+          ['#1e3a8a', '#172554', '#1e40af', '#3b82f6', '#2563eb', '#0f172a', '#312e81', '#4338ca', '#3730a3', '#000000'].forEach(col => {
+              textures.push(`background-color:${col}; background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 20px 20px;`);
           });
 
-          // 3. Matrix/Tech Grids (10)
-          ['#00ff00', '#ef4444', '#3b82f6', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#ffffff'].forEach(col => {
-              textures.push(`background-color:#000; background-image: linear-gradient(${col}33 1px, transparent 1px), linear-gradient(90deg, ${col}33 1px, transparent 1px); background-size: 20px 20px; box-shadow: inset 0 0 50px black;`);
+          // 3. Matrix / Cyber (Green/Red/Code rain simulation) - 10 vars
+          ['#00ff00', '#22c55e', '#4ade80', '#86efac', '#ef4444', '#f97316', '#eab308', '#06b6d4', '#d946ef', '#ffffff'].forEach(col => {
+              textures.push(`background-color: #000; background-image: linear-gradient(0deg, transparent 24%, ${col}44 25%, ${col}44 26%, transparent 27%, transparent 74%, ${col}44 75%, ${col}44 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, ${col}44 25%, ${col}44 26%, transparent 27%, transparent 74%, ${col}44 75%, ${col}44 76%, transparent 77%, transparent); background-size: 30px 30px;`);
           });
 
-          // 4. Wood/Organic Patterns (10)
-          ['#3f2e26', '#5d4037', '#795548', '#8d6e63', '#4e342e', '#3e2723', '#2d1b16', '#5c3a2e', '#4a2c22', '#1b1210'].forEach(col => {
-              textures.push(`background-color: ${col}; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.2) 5px, rgba(0,0,0,0.2) 10px), repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(255,255,255,0.05) 2px, rgba(255,255,255,0.05) 4px);`);
+          // 4. Wood Patterns (Linear Gradients) - 10 vars
+          ['#451a03', '#78350f', '#92400e', '#b45309', '#57534e', '#44403c', '#292524', '#7f1d1d', '#991b1b', '#3f3f46'].forEach(col => {
+              textures.push(`background-color: ${col}; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.05) 5px, rgba(255,255,255,0.05) 10px);`);
           });
 
-          // 5. Carbon Fiber (10)
-          ['#111', '#222', '#333', '#1a1a1a', '#2a2a2a', '#0f172a', '#1e293b', '#334155', '#171717', '#262626'].forEach(col => {
+          // 5. Carbon Fiber (Checkered/Radial) - 10 vars
+          ['#0a0a0a', '#171717', '#262626', '#111827', '#1f2937', '#0f172a', '#1e293b', '#334155', '#3f3f46', '#52525b'].forEach(col => {
               textures.push(`background-color: ${col}; background-image: radial-gradient(black 15%, transparent 16%), radial-gradient(black 15%, transparent 16%), radial-gradient(rgba(255,255,255,0.1) 15%, transparent 20%), radial-gradient(rgba(255,255,255,0.1) 15%, transparent 20%); background-position: 0 0, 8px 8px, 0 1px, 8px 9px; background-size: 16px 16px;`);
           });
 
-          // 6. Stars (10)
-          const starColors = ['#000000', '#0f172a', '#1e1b4b', '#312e81', '#1a1a2e', '#16213e', '#0f3460', '#533483', '#240046', '#10002b'];
-          starColors.forEach(col => {
-              textures.push(`background-color: ${col}; background-image: radial-gradient(white 1px, transparent 1.5px), radial-gradient(white 1px, transparent 1.5px); background-size: 50px 50px, 90px 90px; background-position: 0 0, 40px 45px;`);
+          // 6. Stars / Space (Dots) - 10 vars
+          ['#020617', '#0f172a', '#1e1b4b', '#312e81', '#172554', '#1e3a8a', '#1e40af', '#3b0764', '#581c87', '#4c1d95'].forEach(col => {
+              textures.push(`background-color: ${col}; background-image: radial-gradient(white 1px, transparent 1px), radial-gradient(white 1px, transparent 1px); background-size: 50px 50px, 100px 100px; background-position: 0 0, 25px 25px;`);
           });
 
-          // 7. Polka Dots (10)
-          ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e'].forEach(col => {
-              textures.push(`background-color: #ffffff10; background-image: radial-gradient(${col} 15%, transparent 16%), radial-gradient(${col} 15%, transparent 16%); background-size: 20px 20px; background-position: 0 0, 10px 10px;`);
+          // 7. Brushed Metal (Noise/Lines) - 10 vars
+          ['#334155', '#475569', '#64748b', '#94a3b8', '#525252', '#737373', '#a3a3a3', '#1f2937', '#374151', '#4b5563'].forEach(col => {
+              textures.push(`background-color: ${col}; background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.05) 2px, rgba(255,255,255,0.05) 4px);`);
           });
 
-          // 8. Zig Zag (10)
-          ['#333', '#444', '#555', '#666', '#777', '#888', '#999', '#aaa', '#bbb', '#ccc'].forEach(col => {
-              textures.push(`background-color: #111; background-image: linear-gradient(135deg, ${col} 25%, transparent 25%), linear-gradient(225deg, ${col} 25%, transparent 25%), linear-gradient(45deg, ${col} 25%, transparent 25%), linear-gradient(315deg, ${col} 25%, transparent 25%); background-position: 10px 0, 10px 0, 0 0, 0 0; background-size: 20px 20px; opacity: 0.5;`);
+          // 8. Honeycomb / Hex (Simulated via gradients) - 10 vars
+          ['#ea580c', '#d97706', '#65a30d', '#059669', '#0891b2', '#2563eb', '#7c3aed', '#db2777', '#e11d48', '#ca8a04'].forEach(col => {
+              textures.push(`background-color: #111; background-image: radial-gradient(${col}33 50%, transparent 55%); background-size: 20px 20px;`);
           });
 
-          // 9. Diagonal Stripes (10)
-          ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fa0', '#0af', '#a0f', '#0fa'].forEach(col => {
-              textures.push(`background: repeating-linear-gradient(45deg, ${col}11, ${col}11 10px, transparent 10px, transparent 20%);`);
+          // 9. Circuit Board (Lines) - 10 vars
+          ['#047857', '#059669', '#10b981', '#34d399', '#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63', '#064e3b'].forEach(col => {
+              textures.push(`background-color: ${col}; background-image: linear-gradient(90deg, rgba(0,0,0,0.3) 50%, transparent 50%), linear-gradient(rgba(0,0,0,0.3) 50%, transparent 50%); background-size: 40px 40px;`);
           });
 
-          // 10. Complex Gradients (20)
-          for(let i=0; i<20; i++) {
-              const hue = Math.floor(i * 18);
-              textures.push(`background: linear-gradient(${i*18}deg, hsl(${hue}, 60%, 20%), hsl(${hue+90}, 60%, 20%), hsl(${hue+180}, 60%, 20%));`);
-          }
+          // 10. Retro Grid (Perspective-ish) - 10 vars
+          ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6'].forEach(col => {
+              textures.push(`background-color: #1a0b2e; background-image: linear-gradient(${col} 1px, transparent 1px), linear-gradient(90deg, ${col} 1px, transparent 1px); background-size: 40px 40px; box-shadow: inset 0 0 100px #000;`);
+          });
+
+          // 11. Abstract Shapes (Circles) - 10 vars
+          ['#f0f9ff', '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#0284c7', '#0369a1', '#075985', '#0c4a6e'].forEach(col => {
+              textures.push(`background-color: #0f172a; background-image: radial-gradient(${col}22 20%, transparent 20%), radial-gradient(${col}22 20%, transparent 20%); background-position: 0 0, 25px 25px; background-size: 50px 50px;`);
+          });
+
+          // 12. Caution Stripes - 10 vars
+          ['#fbbf24', '#f59e0b', '#d97706', '#b45309', '#ef4444', '#dc2626', '#b91c1c', '#84cc16', '#65a30d', '#4d7c0f'].forEach(col => {
+              textures.push(`background-color: #111; background-image: repeating-linear-gradient(-45deg, ${col}, ${col} 10px, black 10px, black 20px);`);
+          });
 
           return textures;
       }
@@ -955,7 +959,7 @@
       const TEXTURES = generateTextures();
       
       const PROFILE_BGS = TEXTURES; // 100+ items
-      const CARD_BGS = TEXTURES;    // 100+ items (reusing same logic for consistency)
+      const CARD_BGS = TEXTURES;    // 100+ items
 
       // Initialize Icons
       lucide.createIcons();
